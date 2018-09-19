@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        
+        <meta charset="UTF-8">
+
+        <script src="./dhtmlx/dhtmlx.js"></script>
+        <link rel="stylesheet" type="text/css" href="./dhtmlx/dhtmlx.css"/>
+
+        <style>
+            html, body {
+                width    : 100%;
+                height   : 100%;
+                margin   : 0px;
+                padding  : 0px;
+                overflow : hidden;
+            }
+        </style>
+
+    </head>
+    <body>
+        <script>
+            
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $ajax     = require('../library/ajax');
+            var $electron = require('electron');
+            var $exe      = require('./view.mdi.html.exe');
+            var $base64   = require('base-64');
+            var $event    = $electron.ipcRenderer;
+            var $window   = $electron.remote.BrowserWindow;
+            var $href     = new URL(document.location.href);
+            var $User     = JSON.parse($href.searchParams.get('user'));
+            var $img      = './icons/';
+            var $mode     = $path.join(__dirname,'/../conf/mode.json');
+                $mode     = $fs.readFileSync($mode);
+                $mode     = JSON.parse($mode);
+                $baseHref = $mode.build.client.baseHref;
+
+            var mdi = new dhtmlXLayoutObject(document.body,'4A');
+                mdi.cells('a').setText('Biblioteca');
+                mdi.cells('a').fixSize(true,true);
+                mdi.cells('a').setWidth(280);
+                mdi.cells('a').setHeight(200);
+                mdi.cells('a').hideArrow();
+                mdi.cells('b').setText('Tareas');
+                mdi.cells('b').hideArrow();
+                mdi.cells('b').fixSize(true,true);
+                mdi.cells('b').setWidth(280);
+                mdi.cells('c').setText('Boletín');
+                mdi.cells('c').fixSize(false,false);
+                mdi.cells('d').setText('SILEJU');
+                mdi.cells('d').fixSize(false,false);
+                mdi.cells('d').attachURL('http://www.sileju.com');
+                mdi.cells('d').collapse();
+                mdi.attachEvent('onCollapse',(cell) => {
+                    if(cell==='d'){
+                        mdi.cells('a').layout.base.style.width='280px';
+                        mdi.cells('a').setWidth(280);
+                    }
+                });
+                mdi.attachEvent('onExpand',(cell) => {
+                    if(cell==='d'){
+                        mdi.cells('a').setWidth(0);
+                        mdi.cells('a').layout.base.style.width='0px';
+                        mdi.cells('c').setWidth(window.innerWidth/2);
+                        mdi.cells('d').setWidth(window.innerWidth/2);
+                    }
+                });
+
+            var menu = mdi.attachMenu();
+                menu.loadStruct([
+                    {id:'Archivo',text:'Archivo',img:$img+'application.png',imgdis:$img+'application.png',items:[
+                        {id:'formPassword', text:'Cambiar Password',       img:$img+'application_key.png',    imgdis:$img+'application_key.png'},
+                        {id:'formLogout',   text:'Cerrar la Sesión',       img:$img+'time_delete.png',        imgdis:$img+'time_delete.png'},
+                        {id:'formClose',    text:'Salir de la Aplicación', img:$img+'application_delete.png', imgdis:$img+'application_delete.png'}
+                    ]}
+                ]);
+                menu.attachEvent('onClick',(button) => {
+                    if(button==='formPassword') $exe.formPassword();
+                    if(button==='formLogout')   $exe.formLogout();
+                    if(button==='formClose')    $exe.formClose();
+                });
+
+            var ribbon = mdi.attachRibbon();
+                ribbon.loadStruct({
+                    tabs:[
+                        {id:'editor',text:'',active:true,items:[
+                            {type:'block',text:'Boletines',mode:'cols', list:[
+                                {id:'boletinGuardar',type:'button',text:'Guardar Boletin',img:$img+'page_save.png'}
+                            ]},
+                            {type:'block',text:'Herramientas',model:'cols',list:[
+                                {id:'leyNuevoAMano',         type:'button', text:'Ley',             img:$img+'report.png'},
+                                {id:'resolucionNuevoAMano',  type:'button', text:'Resolución',      img:$img+'script.png'},
+                                {id:'declaracionNuevoAMano', type:'button', text:'Declaración',     img:$img+'newspaper.png'},
+                                {id:'tableRowDelete',        type:'button', text:'Eliminar Fila',   img:$img+'table_row_delete.png'},
+                                {id:'tableRowInsert',        type:'button', text:'Insertar Fila',   img:$img+'table_row_insert.png'},
+                                {id:'buscarProyecto',        type:'button', text:'Buscar Proyecto', img:$img+'page_find.png'}
+                            ]}
+                        ]}
+                    ]
+                });
+                ribbon.attachEvent('onClick',(button)=>{
+                    if(button==='boletinGuardar')        $exe.boletinGuardar();
+                    if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
+                    if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
+                    if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
+                    if(button==='tableRowDelete')        $exe.rowDelete();
+                    if(button==='tableRowInsert')        $exe.rowInsert();
+                    if(button==='buscarProyecto')        $exe.buscarProyecto();
+                });
+
+            var toolbarc = mdi.cells('c').attachToolbar();
+                toolbarc.loadStruct([
+                    {id:'boletinGuardar',        type:'button', text:'', img:$img+'page_save.png'},
+                    {id:'leyNuevoAMano',         type:'button', text:'', img:$img+'report.png'},
+                    {id:'resolucionNuevoAMano',  type:'button', text:'', img:$img+'script.png'},
+                    {id:'declaracionNuevoAMano', type:'button', text:'', img:$img+'newspaper.png'},
+                    {id:'tableRowDelete',        type:'button', text:'', img:$img+'table_row_delete.png'},
+                    {id:'tableRowInsert',        type:'button', text:'', img:$img+'table_row_insert.png'},
+                    {id:'buscarProyecto',        type:'button', text:'', img:$img+'page_find.png'}
+                ]);
+                toolbarc.attachEvent('onClick',(button)=>{
+                    if(button==='boletinGuardar')        $exe.boletinGuardar();
+                    if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
+                    if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
+                    if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
+                    if(button==='tableRowDelete')        $exe.rowDelete();
+                    if(button==='tableRowInsert')        $exe.rowInsert();
+                    if(button==='buscarProyecto')        $exe.buscarProyecto();
+                });
+
+            var tree = mdi.cells('a').attachTree();
+                tree.setImagesPath('./dhtmlx/imgs/dhxtree_web/');
+                tree.load($baseHref + 'models/model/tree/init',null,'json');
+                tree.attachEvent('onSelect',$exe.boletinEditar);
+
+            var list = mdi.cells('b').attachList();
+                list.define('type',{template:"<strong>#titulo#</strong>:<br/>#tarea#",width:270,margin:5});
+
+        </script>
+</body>
+</html>

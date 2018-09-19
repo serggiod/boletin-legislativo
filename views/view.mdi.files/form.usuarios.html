@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        
+        <meta charset="UTF-8">
+
+        <script src="../dhtmlx.js"></script>
+        <link rel="stylesheet" type="text/css" href="../dhtmlx.css"/>
+
+        <style>
+            html, body {
+                width    : 100%;
+                height   : 100%;
+                margin   : 0px;
+                padding  : 0px;
+                overflow : hidden;
+            }
+        </style>
+
+    </head>
+    <body>
+        <script>
+
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $electron = require('electron');
+            var $md5      = require('js-md5');
+            var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
+            var $event    = $electron.ipcRenderer;
+            
+            var layout = new dhtmlXLayoutObject(document.body,'1C');
+                layout.cells('a').setText('');
+                layout.cells('a').hideHeader();
+
+            var grid = layout.cells('a').attachGrid();
+                grid.setHeader('ID,Nombre,Apellido,Usuario,Tipo,Password');
+                grid.setInitWidths('50,*,*,100,100,150');
+                grid.setColAlign('center,center,center,center,center,center');
+                grid.setColTypes('ro,ro,ro,ro,ro,ro');
+                grid.setColSorting('str,str,str,str,str,str');
+                grid.init();
+                grid.load('/models/model/usuarios/select','json');
+
+            var nuevo = () => {
+                let window = new dhtmlXWindows();
+                    window.createWindow('windown',0,0,400,250);
+                    window.window('windown').setText('Nuevo Usuario');
+                    window.window('windown').setModal(true);
+                    window.window('windown').center();
+                let form = window.window('windown').attachForm([
+                        {name:'nombre',   type:'input',    label:'Nombre',   labelWidth:150, inputWidth:150, maxLength:30, offsetLeft:5, required:true},
+                        {name:'apellido', type:'input',    label:'Apellido', labelWidth:150, inputWidth:150, maxLength:25, offsetLeft:5, required:true},
+                        {name:'usuario',  type:'input',    label:'Usuario',  labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, required:true},
+                        {name:'password', type:'password', label:'Password', labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, required:true},
+                        {name:'tipo',     type:'select',   label:'Tipo',     labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, required:true, options:[
+                            {text:'Usuario', value:'Usuario'},
+                            {text:'Administrador', value:'Administrador'},
+                            {text:'Super Usuario', value:'Super Usuario'}
+                        ]}
+                    ]);
+                    form.enableLiveValidation(true);
+                    form.attachEvent('onEnter',()=>{aceptar();});
+                let aceptar = ()  => {
+
+                    window.window('windown').progressOn();
+
+                    let url = '/models/model/usuarios/insert';
+
+                    let header = new Object();
+                        header['Content-Type'] = 'application/json';
+
+                    let body = new Object();
+                        body['nombre']   = form.getItemValue('nombre').match(/[A-Z0-9\ ]{2,30}/gi).join('');
+                        body['apellido'] = form.getItemValue('apellido').match(/[A-Z0-9\ ]{2,30}/gi).join('');
+                        body['usuario']  = form.getItemValue('usuario').match(/[A-Z0-9\ ]{2,30}/gi).join('');
+
+                        body['password'] = form.getItemValue('password');
+                        body['password'] = body['password'].match(/[A-Z0-9]{4,10}/gi);
+                        body['password'] = body['password'].join('');
+                        body['password'] = $md5(body['password']);
+                        
+                        body['tipo'] = form.getItemValue('tipo');
+                        body['tipo'] = body['tipo'].match(/super usuario|administrador|usuario/gi);
+                        body['tipo'] = body['tipo'].join('');
+                        
+                        $ajax
+                            .header(header)
+                            .body(body)
+                            .post(url,(json)=>{
+                                
+                                if(json.result==true) grid.clearAndLoad('/models/model/usuarios/select','json');
+                                else dhtmlx.message({
+                                    type:'alert-error',
+                                    title:'ERROR',
+                                    text:'No se pudo guardar el usuario.',
+                                    ok:'Aceptar'
+                                });
+                                
+                                window.window('windown').progressOff();
+                                window.window('windown').close();
+                        });
+                };
+                let cancelar = () => { window.window('windown').close(); };
+                let toolbar = window.window('windown').attachToolbar();
+                    toolbar.loadStruct([
+                        {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
+                        {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
+                    ]);
+                    toolbar.attachEvent('onClick',(button)=>{
+                        switch(button){
+                            case 'aceptar'  : aceptar();  break;
+                            case 'cancelar' : cancelar(); break;
+                        }
+                    });
+            };
+
+            var modificar = () => {
+                if(confirm('¿Esta seguro que desea modificar a este usuario?')){
+                    let index = grid.getSelectedRowId();
+                    if(index===null) dhtmlx.message({
+                        type:'alert-error',
+                        title:'ERROR',
+                        text:'Debe seleccionar una fila.',
+                        ok:'Aceptar'
+                    });
+                    else{
+                        let id = grid.cells(index,0).getValue();
+
+                        let json = new Object();
+                            json['nombre']   = grid.cells(index,1).getValue();
+                            json['apellido'] = grid.cells(index,2).getValue();
+                            json['usuario']  = grid.cells(index,3).getValue();
+                            json['tipo']     = grid.cells(index,4).getValue();
+                            json['password'] = grid.cells(index,5).getValue();
+                        
+                        let window = new dhtmlXWindows();
+                            window.createWindow('windowm',0,0,400,250);
+                            window.window('windowm').setText('Editar Usuario');
+                            window.window('windowm').setModal(true);
+                            window.window('windowm').center();
+
+                        let form = window.window('windowm').attachForm([
+                                {name:'nombre',   type:'input',    label:'Nombre',   labelWidth:150, inputWidth:150, maxLength:30, offsetLeft:5, required:true, value:json.nombre},
+                                {name:'apellido', type:'input',    label:'Apellido', labelWidth:150, inputWidth:150, maxLength:25, offsetLeft:5, required:true, value:json.apellido},
+                                {name:'usuario',  type:'input',    label:'Usuario',  labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, required:true, value:json.usuario},
+                                {name:'password', type:'password', label:'Password', labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, value:''},
+                                {name:'tipo',     type:'select',   label:'Tipo',     labelWidth:150, inputWidth:150, maxLength:10, offsetLeft:5, value:json.tipo, required:true, options:[
+                                    {text:'Usuario', value:'Usuario'},
+                                    {text:'Administrador', value:'Administrador'},
+                                    {text:'Super Usuario', value:'Super Usuario'}
+                                ]}
+                            ]);
+                            form.enableLiveValidation(true);
+                            form.attachEvent('onEnter',()=>{aceptar();});
+                        
+                        let aceptar =  () => {
+                            window.window('windowm').progressOn();
+                            
+                            let url = '/models/model/usuarios/update/' + id;
+
+                            let header = new Object();
+                                header['Content-Type'] = 'application/json';
+
+                            let rege = new RegExp('[A-Z0-9\ ]{2,30}','gi');
+                            let regu = new RegExp('[A-Z0-9]{4,10}','gi');
+
+                            let body = new Object();
+                                body['nombre']   = form.getItemValue('nombre').match(rege).join('');
+                                body['apellido'] = form.getItemValue('apellido').match(rege).join('');
+                                body['tipo']     = form.getItemValue('tipo').match(rege).join('');
+                                body['usuario']  = form.getItemValue('usuario').match(regu).join('');
+                                body['password'] = form.getItemValue('password');
+                                if(body['password'].length>=1){
+                                    body['password'] = body['password'].match(regu).join('');
+                                    body['password'] = $md5(body['password']);
+                                }
+                                
+
+                                $ajax
+                                    .header(header)
+                                    .body(body)
+                                    .put(url,(json)=>{
+                                        if(json.result==true) grid.clearAndLoad('/models/model/usuarios/select','json');
+                                        else dhtmlx.message({
+                                            type:'alert-error',
+                                            title:'ERROR',
+                                            text:'No se pudo modificar el usuario.',
+                                            ok:'Aceptar'
+                                        });
+                                        window.window('windowm').close();
+                                        window.window('windowm').progressOff();
+                                });
+                        };
+
+                        let cancelar = () => { window.window('windowm').close(); };
+
+                        let toolbar = window.window('windowm').attachToolbar();
+                            toolbar.loadStruct([
+                                {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
+                                {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
+                            ]);
+                            toolbar.attachEvent('onClick',(button)=>{
+                                switch(button){                            
+                                    case 'aceptar'  : aceptar();   break;
+                                    case 'cancelar' : cancelar();  break;
+                                }
+                            });
+                    }
+                }
+            };
+
+            var eliminar = () => {
+                if(confirm('¿Esta seguro que desea eliminar este registro?')){
+                    var index = grid.getSelectedRowId();
+                        if(index===null) dhtmlx.message({
+                            type:'alert-errror',
+                            title:'ERROR',
+                            text:'Debe seleccionar una fila.',
+                            ok:'Aceptar'
+                        });
+                        else {
+                            let id =  grid.cells(index,0).getValue();
+                            let url = '/models/model/usuarios/delete/' + id;
+                                layout.cells('a').progressOn();
+                                $ajax
+                                    .delete(url,(json)=>{
+                                        if(json.result==true) grid.clearAndLoad('/models/model/usuarios/select','json');
+                                        else dhtmlx.message({
+                                            type:'alert-error',
+                                            title:'ERROR',
+                                            text:'No se pudo borrar el usuario.',
+                                            ok:'Aceptar'
+                                        });
+                                        layout.cells('a').progressOff();
+                                    });
+                        }
+                }
+            };
+
+            var toolbar = layout.cells('a').attachToolbar();
+                toolbar.loadStruct([
+                    {id:'nuevo',     type:'button', text:'Nuevo',     img:'/icons/user_add.png',    imgdis:'/icons/user_add.png'},
+                    {id:'modificar', type:'button', text:'Modificar', img:'/icons/user_edit.png',   imgdis:'/icons/user_edit.png'},
+                    {id:'eliminar',  type:'button', text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'}
+                ]);
+                toolbar.attachEvent('onClick',(button)=>{
+                    switch(button){
+                        case 'nuevo'     : nuevo();     break;
+                        case 'modificar' : modificar(); break;
+                        case 'eliminar'  : eliminar();  break;
+                    }
+                });
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+            <meta charset="UTF-8">
+        
+            <script src="../dhtmlx.js"></script>
+            <link rel="stylesheet" type="text/css" href="../dhtmlx.css"/>
+    
+            <style>
+                html, body {
+                    width    : 100%;
+                    height   : 100%;
+                    margin   : 0px; 
+                    padding  : 0px;
+                    overflow : hidden;
+                }
+            </style>
+    </head>
+    <body>
+        <script>
+            
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
+            var $exe      = require(process.env.INIT_CWD + '/library/views.api');
+            var $electron = require('electron');
+            var $event    = $electron.ipcRenderer;
+            var $window   = $electron.remote.BrowserWindow;
+            var $dialog   = $electron.remote.dialog;
+
+                window.addEventListener('load',()=>{
+
+                    let layout = new dhtmlXLayoutObject(document.body,'1C');
+                        layout.cells('a').setText('');
+                        layout.cells('a').hideHeader();
+                        layout.cells('a').progressOn();
+
+                    let url = '/models/model/tree/autoridades';
+                    
+                        dhx.ajax().get(url,(json)=>{
+                            json = JSON.parse(json);
+
+                            let action1 = (id) => {
+                                if(id==='aceptar') {
+                                    if(form.validate()){
+                                        let url = '/models/model/tree/autoridades';
+                                        let regx = new RegExp('[a-z0-9'+exe.chars+'. ]','gi');
+                                        let autoridades = new Object();
+                                            autoridades.presidente      = form.getItemValue('presidente').match(regx).join('');
+                                            autoridades.vicepresidente1 = form.getItemValue('vicepresidente1').match(regx).join('');
+                                            autoridades.vicepresidente2 = form.getItemValue('vicepresidente2').match(regx).join('');
+                                            autoridades.parlamentario   = form.getItemValue('parlamentario').match(regx).join('');
+                                            autoridades.administrativo  = form.getItemValue('administrativo').match(regx).join('');
+                                            autoridades = JSON.stringify(autoridades);
+                                        
+                                            dhx.ajax().put(url,autoridades,(json)=>{
+                                                json = JSON.parse(json);
+                                                if(json.result===true){
+                                                    dhtmlx.message('Los datos se han guardado en forma correcta.');
+                                                    electron.remote.getCurrentWindow().close();
+                                                } else dhtmlx.message({text:'No se guardaron los datos.',type:'error'});
+                                            });
+                                    }
+                                }
+                                if(id==='cancelar') electron.remote.getCurrentWindow().close();
+                            };
+
+                            let buttons = [
+                                {type:'button',id:'aceptar', text:'Aceptar', img:'/icons/accept.png'},
+                                {type:'button',id:'cancelar',text:'Cancelar',img:'/icons/cancel.png'}
+                            ];
+
+                            let toolbar = layout.cells('a').attachToolbar();
+                                toolbar.loadStruct(buttons);
+                                toolbar.attachEvent('onClick',action1);
+
+                            let fields = [
+                                {type:'block',list:[
+                                    {type:'input', name:'presidente',      label:'Presidente:',          value:json.rows.presidente,      labelWidth:120, inputWidth:250, required:true,},
+                                    {type:'input', name:'vicepresidente1', label:'Vicepresidente 1ro:',  value:json.rows.vicepresidente1, labelWidth:120, inputWidth:250, required:true,},
+                                    {type:'input', name:'vicepresidente2', label:'Vicepresidente 2do:',  value:json.rows.vicepresidente2, labelWidth:120, inputWidth:250, required:true,},
+                                    {type:'input', name:'parlamentario',   label:'Sec. Parlamentario:',  value:json.rows.parlamentario,   labelWidth:120, inputWidth:250, required:true,},
+                                    {type:'input', name:'administrativo',  label:'Sec. Administrativo:', value:json.rows.administrativo,  labelWidth:120, inputWidth:250, required:true,},
+                                ]}
+                            ];
+
+                            let form = layout.cells('a').attachForm(fields);
+                                form.enableLiveValidation(true);
+                                form.setFocusOnFirstActive();
+
+                                layout.cells('a').progressOff();
+                        });
+                });
+
+        </script>
+    </body>
+</html>

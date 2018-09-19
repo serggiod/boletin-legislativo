@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+
+            <meta charset="UTF-8">
+        
+            <script src="../dhtmlx.js"></script>
+            <link rel="stylesheet" type="text/css" href="../dhtmlx.css"/>
+    
+            <style>
+                html, body {
+                    width    : 100%;
+                    height   : 100%;
+                    margin   : 0px; 
+                    padding  : 0px;
+                    overflow : hidden;
+                }
+            </style>
+
+    </head>
+    <body>
+        <script>
+            
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
+            var $exe      = require(process.env.INIT_CWD + '/library/views.api');
+            var $electron = require('electron');
+            var $event    = $electron.ipcRenderer;
+            var $window   = $electron.remote.BrowserWindow;
+            var $dialog   = $electron.remote.dialog;
+
+                window.addEventListener('load',()=>{
+
+                    let layout = new dhtmlXLayoutObject(document.body,'1C');
+                        layout.cells('a').setText('');
+                        layout.cells('a').hideHeader();
+
+                    let url = '/models/model/tree/remote/boletines';
+
+                    let grid = layout.cells('a').attachGrid();
+                        grid.setHeader('Periodo,Número,Año,Fecha');
+                        grid.setInitWidths('*,150,150,150');
+                        grid.setColAlign('center,center,center,center');
+                        grid.setColTypes('ro,ro,ro,ro');
+                        grid.setColSorting('str,str,str,str');
+                        grid.load(url,'json');
+                        grid.init();
+                        
+                    
+                    let eliminar = () => {
+                        layout.cells('a').progressOn();
+                            let id = grid.getSelectedRowId();
+                            let fname = grid.cells(id,1).getValue() + '-' + grid.cells(id,2).getValue();
+                            if(id===null) dialog.showErrorBox('Error','Debe seleccionar una fila.');
+                            else {
+                                if(confirm('¿Esta seguro que desea eliminar el boletín seleccionado?')){
+                                    let url = '/models/model/tree/remote/boletin/' + id + '/' + fname;
+                                        dhx
+                                            .ajax()
+                                            .del(url,{},(json)=>{
+                                                layout.cells('a').progressOff();
+                                                json = JSON.parse(json);
+                                                if(json.result===true) grid.deleteRow(id);
+                                                else dialog.showErrorBox('Error','No se pudo borrar el usuario.');
+                                            });
+                                }
+                            }
+                        };
+
+                    let toolbar = layout.cells('a').attachToolbar();
+                        toolbar.loadStruct([
+                            {id:'eliminar',  type:'button', text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'}
+                        ]);
+                        toolbar.attachEvent('onClick',(button)=>{
+                            switch(button){
+                                case 'eliminar': eliminar(); break;
+                            }
+                        });
+
+                });
+        </script>
+    </body>
+</html>

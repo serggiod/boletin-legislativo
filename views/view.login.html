@@ -1,0 +1,101 @@
+    <!DOCTYPE html>
+<html lang="es">
+    <head>
+
+        <meta charset="UTF-8">
+        
+        <script src="dhtmlx.js"></script>
+        <link rel="stylesheet" type="text/css" href="dhtmlx.css"/>
+
+        <style>
+            html, body {
+                width    : 100%;
+                height   : 100%;
+                margin   : 0px; 
+                padding  : 0px;
+                overflow : hidden;
+            }
+        </style>
+
+    </head>
+    <body>
+        <script>
+
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $electron = require('electron');
+            var $md5      = require('js-md5');
+            var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
+            var $event    = $electron.ipcRenderer;
+
+                window.addEventListener('load',()=>{
+
+                    let action0 = (id) => {
+                            if(id==='buttonLogin') action1();
+                        };
+
+                    let action1 = () => {
+
+                            let url = '/models/model/auth/login';
+
+                            let header = new Object();
+                                header['Content-Type'] = 'application/json';
+
+                            let body = new Object();
+                                body.user = form.getItemValue('user').match(/[a-z0-9]{4,10}/gi).join('');
+                                body.pass = form.getItemValue('pass').match(/[a-z0-9]{4,10}/gi).join('');
+                                body.pass = $md5(body.pass);
+
+                                layout.cells('a').progressOn();
+
+                                $ajax
+                                    .header(header)
+                                    .body(body)
+                                    .post(url,(json)=>{
+
+                                        if(json.result===true){
+                                            if(json.rows[0].tipo==='Super Usuario') $event.send('win-login-create-mdi-super', json.rows);
+                                            if(json.rows[0].tipo==='Administrador') $event.send('win-login-create-mdi-admin', json.rows);
+                                            if(json.rows[0].tipo==='Usuario')       $event.send('win-login-create-mdi-user',  json.rows);
+                                        } else dhtmlx.message({
+                                            type:'alert-error',
+                                            title:'ERROR',
+                                            text:'El usuario o el password no son válidos.',
+                                            ok:'Aceptar',
+                                            callback:()=>{
+                                                form.setItemValue('user','');
+                                                form.setItemValue('pass','');
+                                                form.setItemFocus('user');
+                                            }
+                                        });
+
+                                        layout.cells('a').progressOff();
+
+                                    });
+                                
+                        };
+
+                    let layout = new dhtmlXLayoutObject(document.body,'1C');
+                        layout.cells('a').setText('');
+                        layout.cells('a').hideHeader();
+
+                    let toolbar = layout.cells('a').attachToolbar();
+                        toolbar.setIconSize(16);
+                        toolbar.loadStruct([
+                            {id:'buttonLogin', type:'button', text:'Autenticar', img:'/icons/page_save.png', imgdis:'/icons/page_save.png'},
+                        ]);
+                        toolbar.attachEvent('onClick',action0);
+
+                    let form = layout.cells('a').attachForm([
+                            {type:'input',   name:'user',label:'Usuario:', offsetLeft:20, labelWidth:140,inputWidth:150, required:true, maxLength:10},
+                            {type:'password',name:'pass',label:'Password:',offsetLeft:20, labelWidth:140,inputWidth:150, required:true, maxLength:10}
+                        ]);
+                        form.enableLiveValidation(true);
+                        form.setItemFocus('user');
+                        form.attachEvent('onEnter',action1);
+
+                });
+
+        </script>
+    </body>
+</html>

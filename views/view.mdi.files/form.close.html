@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        
+        <meta charset="UTF-8">
+
+        <script src="../dhtmlx.js"></script>
+        <link rel="stylesheet" type="text/css" href="../dhtmlx.css"/>
+
+        <style>
+            html, body {
+                width    : 100%;
+                height   : 100%;
+                margin   : 0px;
+                padding  : 0px;
+                overflow : hidden;
+            }
+        </style>
+
+    </head>
+    <body>
+        <script>
+
+            var $fs       = require('fs');
+            var $path     = require('path');
+            var $electron = require('electron');
+            var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
+            var $event    = $electron.ipcRenderer;
+
+
+            window.addEventListener('load',()=>{
+
+                let layout = new dhtmlXLayoutObject(document.body,'1C');
+                    layout.cells('a').setText('');
+                    layout.cells('a').hideHeader();
+                    layout.cells('a').attachHTMLString('<h3 style="text-align:center;">¿Esta seguro que desea salir de esta aplicación?</h3>');
+                
+                let aceptar = () => {
+                    let url = '/models/model/auth/logout';
+                        $ajax
+                            .delete(url,(json)=>{
+                                if(json.result===true) $event.send('form-logout-application-exit');
+                            });
+                };
+
+                let cancelar = () => {
+                    $electron.remote.getCurrentWindow().close();
+                };
+
+                let toolbar = layout.cells('a').attachToolbar();
+                    toolbar.loadStruct([
+                        {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
+                        {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
+                    ]);
+                    toolbar.attachEvent('onClick',(id)=>{
+                        switch(id){
+                            case 'cancelar' : cancelar(); break;
+                            case 'aceptar'  : aceptar();  break;
+                        }
+                    });
+
+            });
+
+        </script>
+    </body>
+</html>

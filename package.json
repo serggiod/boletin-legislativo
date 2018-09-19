@@ -1,0 +1,50 @@
+{
+  "name": "direccion-diario-sesiones",
+  "productName": "LEGISLATURA DE JUJUY / Boletín Legislativo",
+  "version": "0.0.1",
+  "private": true,
+  "main": "project.js",
+  "scripts": {
+    "start": "electron ./",
+    "pack-win32-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=win32 --arch=ia32 --executable-name=client --icon=./assets/icon.ico --overwrite=true --prune --download --asar --win32metadata={'CompanyName':'Legislatura de Jujuy','FileDescription':'Adminstrar Boletín Legislativo','OriginalFilename':'client.exe','ProductName':'client.exe','InternalName':'boletines-mode-client'}",
+    "pack-win32-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=win32 --arch=ia32 --executable-name=server --icon=./assets/icon.ico --overwrite=true --prune --download --win32metadata={'CompanyName':'Legislatura de Jujuy','FileDescription':'Adminstrar Boletín Legislativo','OriginalFilename':'server.exe','ProductName':'server.exe','InternalName':'boletines-mode-server'}",
+    "pack-win64-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=win32 --arch=x64  --executable-name=client --icon=./assets/icon.ico --overwrite=true --prune --download --asar",
+    "pack-win64-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=win32 --arch=x84  --executable-name=server --icon=./assets/icon.ico --overwrite=true --prune --download",
+    "pack-linux32-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=linux --arch=ia32 --executable-name=client --icon=./assets/icon.png --overwrite=true --prune --download --asar",
+    "pack-linux32-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=linux --arch=ia32 --executable-name=server --icon=./assets/icon.png --overwrite=true --prune --download",
+    "pack-linux64-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=linux --arch=x64  --executable-name=client --icon=./assets/icon.png --overwrite=true --prune --download --asar",
+    "pack-linux64-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=linux --arch=x64  --executable-name=server --icon=./assets/icon.png --overwrite=true --prune --download",
+    "gulp-build-server": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js build-in-tmp --mode=server",
+    "gulp-build-client": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js build-in-tmp --mode=client",
+    "gulp-clean": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js clean-dir-tmp",
+    "gulp-rebuild": " .\\node_modules\\gulp\\bin\\gulp.js --gulpfile=.\\gulpfile.js rebuild"
+  },
+  "dependencies": {
+    "arg": "^2.0.0",
+    "base-64": "^0.1.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "form-data": "^2.3.2",
+    "gulp": "^4.0.0",
+    "gulp-exec": "^3.0.2",
+    "gulp-replace": "^1.0.0",
+    "html-docx-js": "^0.3.1",
+    "html-pdf": "^2.2.0",
+    "js-md5": "^0.7.3",
+    "jshint": "^2.9.6",
+    "mysql": "^2.16.0",
+    "node-rest-client": "^3.1.0",
+    "node-rest-client-promise": "^3.1.1",
+    "scp2": "^0.5.0",
+    "ssh2-connect": "^2.0.4",
+    "ssh2-exec": "^0.5.0",
+    "uniqid": "^5.0.3",
+    "zip-dir": "^1.0.2"
+  },
+  "devDependencies": {
+    "electron": "^2.0.7",
+    "electron-download": "^4.1.1",
+    "electron-packager": "^12.1.1"
+  }
+}
