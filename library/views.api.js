@@ -1,6 +1,5 @@
 var $fs      = require('fs');
 var $path    = require('path');
-var $base64  = require('base-64');
 var viewsApi = {
     //formPassword:ok
     formPassword    : () => {
@@ -207,9 +206,7 @@ var viewsApi = {
     //periodoEditar:ok
     periodoEditar   : () => {
 
-        let $this  = this;
         let id     = tree.getSelectedItemId();
-        let index  = tree.getIndexById(id);
         let parent = tree.getParentId(id);
 
         if(parent===0){
@@ -506,36 +503,36 @@ var viewsApi = {
             });
         }
     },
-    //boletinGuardar:
+    //boletinGuardar:ok
     boletinGuardar  : () => {
         let id     = tree.getSelectedItemId();
         let file   = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
         if(parent!=0){
+
             let url = '/models/model/tree/boletin/' + file + '/html';
             let iframe = mdi.cells('c').getFrame();
             let idocument = iframe.document || iframe.contentDocument || iframe.contentWindow.document;
-            let header = {'Content-Type':'boletin/html'};
-            let body = idocument;
-                body = body.documentElement.innerHTML;
-                body = "<html>\n" + body + "</html>\n";
-                body = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//ES\" \"http://www.w3.org/TR/html4/strict.dtd\">\n" + body;
-                //body += '<html lang="ES">';
-                //body += idocument.getElementsByTagName('html')[0].innerHTML;
-                //body += '</html>';
-                //body = $base64.encode(body);
+            let header = {
+                'Content-Type':'text/plain; charset=UTF-8',
+                'Content-Generator':'legislatura/diario/boletin'
+            };
+            let html = idocument;
+                html = html.documentElement.innerHTML;
+                html = "<html>\n" + html + "</html>\n";
+                html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//ES\" \"http://www.w3.org/TR/html4/strict.dtd\">\n" + html;
+                html = window.btoa(html);
+
                 $ajax
                     .header(header)
-                    .body(body)
+                    .body(html)
                     .put(url,(json)=>{
-                        if(json.result===true) dhtmlx.message({text:'El Boletín Legislativo se guardó en forma correcta.'});
+                        if(json.result===true)  dhtmlx.message({text:'El Boletín Legislativo se guardó en forma correcta.'});
                         if(json.result===false) dhtmlx.message({text:'No se pudo guardar los cambios en el Boletín Legislativo',type:'error'});
                     });
+
         }
     },
-
-
-    
     //boletinEliminar:ok
     boletinEliminar : () => {
 
@@ -581,76 +578,65 @@ var viewsApi = {
         }
         
     },
-    //boletinBloquear:
+    //boletinBloquear:ok
     boletinBloquear : () => {
         let id = tree.getSelectedItemId()
         let parent = tree.getParentId(id);
-            if(parent!=0){
-                dhtmlx.confirm({
-                    type:'confirm-error',
-                    title:'CONFIRMAR',
-                    text:'¿Esta seguro que desea bloquear este boletín?',
-                    ok:'Aceptar',
-                    cancel:'Cancelar',
-                    callback:(bol)=>{
-                        if(bol){
-                            let file = tree.getSelectedItemText(id).replace('/','-');
-                            let url = '/models/model/tree/boletin/' + file +'/bloquear';
-                            dhx.ajax().put(url,null,(json)=>{
-                                json = JSON.parse(json);
-                                if(json.result===true) dhtmlx.message({
-                                        type:'alert-warning',
-                                        title:'OK',
-                                        text:'El Boletín se bloqueo con éxito.',
-                                        ok:'Aceptar',
-                                        callback:()=>{ $exe.boletinEditar(); }
-                                    });
-                                else dhtmlx.message({
-                                    type:'alert-error',
-                                    title:'ERROR',
-                                    text:'No se pudo bloquear el boletín.',
-                                    ok:'Aceptar'
-                                });
+        let file = tree.getSelectedItemText(id).replace('/','-');
+            if(parent!=0 && confirm('¿Esta seguro que desea bloquear este boletín?')===true){
+
+                let url = '/models/model/tree/boletin/' + file +'/bloquear';
+                $ajax
+                    .put(url,(json)=>{
+                        if(json.result===true) dhtmlx.message({
+                                type:'alert-warning',
+                                title:'OK',
+                                text:'El Boletín se bloqueo con éxito.',
+                                ok:'Aceptar',
+                                callback:()=>{ $exe.boletinEditar(); }
                             });
-                        }
-                    }
-                });
+                        else dhtmlx.message({
+                            type:'alert-error',
+                            title:'ERROR',
+                            text:'No se pudo bloquear el boletín.',
+                            ok:'Aceptar'
+                        });
+                    });
+
             }
     },
-    //boletinDesbloquear:
+    //boletinDesbloquear:ok
     boletinDesbloquear : () => {
+
         let id = tree.getSelectedItemId()
+
         let parent = tree.getParentId(id);
-            if(parent!=0){
-                dhtmlx.confirm({
-                    type:'confirm-error',
-                    title:'CONFIRMAR',
-                    text:'¿Esta seguro que desea desbloquear este boletín?',
-                    ok:'Aceptar',
-                    cancel:'Cancelar',
-                    callback:(bol)=>{
-                        if(bol){
-                            let file = tree.getSelectedItemText(id).replace('/','-');
-                            let url = '/models/model/tree/boletin/' + file +'/desbloquear';
-                                dhx.ajax().put(url,null,(json)=>{
-                                    json = JSON.parse(json);
-                                    if(json.result===true) dhtmlx.message({
-                                            type:'alert-warning',
-                                            title:'OK',
-                                            text:'El Boletín se desbloqueo con éxito.',
-                                            ok:'Aceptar',
-                                            callback:()=>{ $exe.boletinEditar(); }
-                                        });
-                                    else dhtmlx.message({
-                                        type:'alert-error',
-                                        title:'ERROR',
-                                        text:'No se pudo desbloquear el boletín.',
-                                        ok:'Aceptar'
-                                    });
-                                });
-                        }
-                    }
-                });
+
+            if(parent!=0 && confirm('¿Esta seguro que desea desbloquear este boletín?')===true){
+
+                let file = tree.getSelectedItemText(id).replace('/','-');
+
+                let url = '/models/model/tree/boletin/' + file +'/desbloquear';
+
+                    $ajax.put(url,(json)=>{
+
+                        if(json.result===true) dhtmlx.message({
+                                type:'alert-warning',
+                                title:'OK',
+                                text:'El Boletín se desbloqueo con éxito.',
+                                ok:'Aceptar',
+                                callback:()=>{ $exe.boletinEditar(); }
+                            });
+
+                        else dhtmlx.message({
+                            type:'alert-error',
+                            title:'ERROR',
+                            text:'No se pudo desbloquear el boletín.',
+                            ok:'Aceptar'
+                        });
+
+                    });
+
             }
     },
 
@@ -848,14 +834,13 @@ var viewsApi = {
     // Tareas.
     tareaNueva : () => {
 
-        let $this = $exe;
         let id = tree.getSelectedItemId();
         let parent = tree.getParentId(id);
 
         if(parent!=0){
 
             let window = new dhtmlXWindows();
-                window.createWindow('window',0,0,330,270);
+                window.createWindow('window',0,0,400,280);
                 window.window('window').setText('Nueva Tarea');
                 window.window('window').setModal(true);
                 window.window('window').denyMove();
@@ -865,9 +850,9 @@ var viewsApi = {
 
             let form = window.window('window').attachForm([
                 {type:'label',  label:'Titulo:'},
-                {type:'input',  name:'titulo', inputWidth:300, required:true},
-                {type:'label',  label:'Tarea:'},
-                {type:'editor', name:'tarea',  inputWidth:300, inputHeight:80, required:true}
+                {type:'input',  name:'titulo', inputWith:400,required:true},
+                {type:'label',  label:'Descripción:'},
+                {type:'editor', name:'tarea',inputWith:400,inputHeight:80,required:true}
             ]);
             form.enableLiveValidation(true);
             form.setFocusOnFirstActive();
@@ -910,8 +895,8 @@ var viewsApi = {
 
             let toolbar = window.window('window').attachToolbar();
             toolbar.loadStruct([
-                {id:'aceptar',  type:'button', text:'Aceptar',  img:'/famfamfam-silk/dist/png/accept.png', imgdis:'/famfamfam-silk/dist/png/accept.png'},    
-                {id:'cancelar', type:'button', text:'Cancelar', img:'/famfamfam-silk/dist/png/cancel.png', imgdis:'/famfamfam-silk/dist/png/cancel.png'}
+                {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
+                {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
             ]);
             toolbar.attachEvent('onClick',(button)=>{
                 switch(button){
@@ -959,11 +944,11 @@ var viewsApi = {
                                 json.indexb = tree.getIndexById(id);
                                 json.indext = list.indexById(idt);
                                 json = JSON.stringify(json);
-                            let url  = 'models/model/tree/tarea';
+                            let url  = '/models/model/tree/tarea';
                                 dhx.ajax().put(url,json,(json)=>{
                                     json = JSON.parse(json);
                                     if(json.result===true){
-                                        let url = 'models/model/tree/tareas/'
+                                        let url = '/models/model/tree/tareas/'
                                             url += tree.getIndexById(parent);
                                             url += '.';
                                             url += tree.getIndexById(id);
@@ -977,8 +962,8 @@ var viewsApi = {
                     };
                     let toolbar = window.window('window').attachToolbar();
                         toolbar.loadStruct([
-                            {id:'aceptar',  type:'button', text:'Aceptar',  img:'/famfamfam-silk/dist/png/accept.png', imgdis:'/famfamfam-silk/dist/png/accept.png'},    
-                            {id:'cancelar', type:'button', text:'Cancelar', img:'/famfamfam-silk/dist/png/cancel.png', imgdis:'/famfamfam-silk/dist/png/cancel.png'}
+                            {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
+                            {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
                         ]);
                         toolbar.attachEvent('onClick',(button)=>{
                             switch(button){

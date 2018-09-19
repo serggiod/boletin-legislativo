@@ -5,7 +5,6 @@ var $log      = require('../library/log.api');
 var $unique   = require('uniqid');
 var $express  = require('express');
 var $router   = $express.Router();
-var $base64   = require('base-64');
 var $htmlPdf  = require('html-pdf');
 var $HtmlDocx  = require('html-docx-js');
 var $Mysql     = require('mysql');
@@ -13,12 +12,13 @@ var $sshconn   = require('ssh2-connect');
 var $sshexec   = require('ssh2-exec');
 var $sshclient = require('scp2');
 
-$router.all('/',(rq,$rs,n)=>{
+$router.all('/',($rq,$rs)=>{
     $rs.sendStatus(404);
 });
 
 // Tree content.
-$router.get('/init',(rq,$rs,n) => {
+// $router.get('/init':ok
+$router.get('/init',(rq,$rs) => {
     if(rq.session.status===true){
 
         let log = rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -79,7 +79,8 @@ $router.get('/init',(rq,$rs,n) => {
 });
 
 // Periodos.
-$router.post('/periodo',(rq,$rs,n) => {
+// $router.post('/periodo':ok
+$router.post('/periodo',(rq,$rs) => {
     if(rq.session.status===true){
 
         let log = rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -125,7 +126,8 @@ $router.post('/periodo',(rq,$rs,n) => {
     } else $rs.sendStatus(404);
 
 });
-$router.get('/periodo/:id',(rq,$rs,n) => {
+// $router.get('/periodo/:id':ok
+$router.get('/periodo/:id',(rq,$rs) => {
     if(rq.session.status===true){
 
         let where = new Object();
@@ -159,7 +161,8 @@ $router.get('/periodo/:id',(rq,$rs,n) => {
                 
     } else $rs.sendStatus(404);
 });
-$router.put('/periodo/:id',(rq,$rs,n) => {
+// $router.put('/periodo/:id':ok
+$router.put('/periodo/:id',(rq,$rs) => {
     if(rq.session.status===true){
 
         let where = new Object();
@@ -198,7 +201,8 @@ $router.put('/periodo/:id',(rq,$rs,n) => {
 
     } else $rs.sendStatus(404).end();
 });
-$router.delete('/periodo/:id',(rq,$rs,n) => {
+// $router.delete('/periodo/:id':ok
+$router.delete('/periodo/:id',(rq,$rs) => {
     if(rq.session.status===true){
 
         let where = new Object();
@@ -362,29 +366,8 @@ $router.post('/boletin/:periodoid',($rq,$rs)=>{
 
     } else $rs.sendStatus(404);
 });
-/*$router.get('/boletin/:indexes',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let i = rq.params.indexes.match(new RegExp('[0-9.]','g')).join('').split('.');
-        let indexp = i[0];
-        let indexb = i[1];
-            db.select({
-                model:'boletin',
-                path:'item['+indexp+'].item['+indexb+']',
-                callback:(bol,regs)=>{
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/boletin' + i +'.';
-                    let path = '';
-                        if(bol) path = __dirname + '/model.tree.js.logs/success.log';
-                        else path = __dirname + '/model.tree.js.logs/errors.log';
-                        log.set(path,text);
-                        rs.send({result:bol,rows:regs});
-                }
-            });
-    } else $rs.status(404).send();
-})*/
-
 //router.get('/boletin/:file/html':ok
-$router.get('/boletin/:file/html',(rq,$rs,n) => {
+$router.get('/boletin/:file/html',(rq,$rs) => {
     if(rq.session.status===true){
         let file = rq.params.file.match(/[a-z0-9\-]/gi);
             file = file.join('');
@@ -419,7 +402,7 @@ $router.get('/boletin/:file/html',(rq,$rs,n) => {
             });
     } else $rs.sendStatus(404);
 });
-//router.put('/boletin/:file/html':
+//router.put('/boletin/:file/html':ok
 $router.put('/boletin/:file/html',($rq,$rs)=>{
     if($rq.session.status===true){
 
@@ -434,10 +417,9 @@ $router.put('/boletin/:file/html',($rq,$rs)=>{
 
         let path = $path.join(__dirname,'/model.tree.js.files/html/',file);
 
-        let html = $rq.rawBody;
-            //html = html.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\:\ \<\>\/\.\"\=\!\-\.\;]/gim);
-            //html = $base64.decode(html);
-            console.log(path,html);
+        let html = Buffer
+                    .from($rq.rawBody,'base64')
+                    .toString('latin1');
 
             $fs.writeFile(path,html,{encoding:'utf8'},(error)=>{
                 if(error===null) {
@@ -453,41 +435,97 @@ $router.put('/boletin/:file/html',($rq,$rs)=>{
                     $rs.sendStatus(404);
                 }
             });
+
         } else $rs.sendStatus(404);
 });
-/*router.put('/boletin/:file/bloquear',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let file = rq.params.file.match(/[0-9\-]/gi).join('') + '.html';
-        let fpath = path.join(__dirname,'/model.tree.js.files/html/',file);
-        console.log(file,fpath);
-        fs.readFile(fpath,{encoding:'utf-8'},(e,data)=>{
+//$router.put('/boletin/:file/bloquear':ok
+$router.put('/boletin/:file/bloquear',($rq,$rs)=>{
+    if($rq.session.status===true){
+
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/gi);
+            file = file.join('');
+
+        let log = $rq.session.user.nomvre + ' ' + $rq.session.user.apellido;
+            log = log + ' PUT /models/model/tree/boletin/' + file + '/html';
+
+            file = file + '.html';
+
+        let path = $path.join(__dirname,'/model.tree.js.files/html/',file);
+
+        $fs.readFile(path,{encoding:'utf8'},(e,data)=>{
             if(e===null){
                 data = data.replace(/contenteditable="true"/gi,'contenteditable="false"');
-                fs.writeFile(fpath,data,(e)=>{
-                    if(e===null) rs.send({result:true,rows:null});
-                    else $rs.send({result:false,rows:null});
+                $fs.writeFile(path,data,(e)=>{
+                    if(e===null) {
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+                        $rs.json({result:true,rows:null});
+                    }
+                    else {
+                        $log
+                            .to('tree')
+                            .success(log,'errors');
+                        $rs.json({result:false,rows:null});
+                    }
                 });
-            } else $rs.send({result:false,rows:null});
+            } else $rs.sendStatus(404);
         });
-    } else $rs.status(404).send();
+    } else $rs.sendStatus(404);
 });
-router.put('/boletin/:file/desbloquear',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let file = rq.params.file.match(/[0-9\-]/gi).join('') + '.html';
-        let fpath = path.join(__dirname,'/model.tree.js.files/html/',file);
-        fs.readFile(fpath,{encoding:'utf-8'},(e,data)=>{
+//router.put('/boletin/:file/desbloquear':ok
+$router.put('/boletin/:file/desbloquear',($rq,$rs)=>{
+
+    if($rq.session.status===true){
+
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/gi);
+            file = file.join('');
+            
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' PUT /models/model/tree/boletin/' + file + '/desbloquear';
+
+            file = file + '.html';
+
+        let path = $path.join(__dirname,'/model.tree.js.files/html/',file);
+
+        $fs.readFile(path,{encoding:'utf8'},(e,data)=>{
+
             if(e===null){
+
                 data = data.replace(/contenteditable="false"/gi,'contenteditable="true"');
-                fs.writeFile(fpath,data,(e)=>{
-                    if(e===null) rs.send({result:true,rows:null});
-                    else $rs.send({result:false,rows:null});
+                $fs.writeFile(path,data,{encoding:'utf8'},(e)=>{
+                    
+                    if(e===null){
+
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+                        $rs.json({result:true,rows:null});
+
+                    }
+
+                    else {
+
+                        $log
+                            .to('tree')
+                            .write(log,'errors');
+                        $rs.json({result:false,rows:null});
+
+                    }
+
                 });
-            } else $rs.send({result:false,rows:null});
+
+            } else $rs.sendStatus(404);
+
         });
-    } else $rs.status(404).send();
-});*/
+
+    } else $rs.sendStatus(404);
+
+});
 //$router.delete('/boletin/:periodoid/:boletinid/:boletinfile':ok
-$router.delete('/boletin/:periodoid/:boletinid/:boletinfile', (rq,$rs,n) => {
+$router.delete('/boletin/:periodoid/:boletinid/:boletinfile', (rq,$rs) => {
     if(rq.session.status===true){
 
         let periodoid = rq.params.periodoid;
@@ -545,12 +583,13 @@ $router.delete('/boletin/:periodoid/:boletinid/:boletinfile', (rq,$rs,n) => {
                     }
 
                 });
+
     } else  $rs.sendStatus(404);
 });
 
 
-/*// Tareas.
-router.post('/tarea',(rq, rs, n) => {
+// Tareas.
+$router.post('/tarea',($rq,$rs) => {
     if(rq.session.status===true){
         let model  = db.getModel('boletin');
         let indexp = rq.body.indexp.match(/[0-9]/g).join('');
@@ -583,7 +622,7 @@ router.post('/tarea',(rq, rs, n) => {
             });
     } else $rs.status(404).send();
 });
-router.get('/tareas/:indexes',  (rq, rs, n) => {
+/*router.get('/tareas/:indexes',  (rq, rs, n) => {
     if(rq.session.status===true){
         let indexes = rq.params.indexes.match(/[0-9.]/g).join('').split('.');
         let path = 'item[';
@@ -986,7 +1025,8 @@ router.put('/autoridades',(rq,rs,n)=>{
 });*/
 
 // Super respaldo.
-$router.get('/super/respaldo/load',(rq,$rs,n)=>{
+// $router.get('/super/respaldo/load':ok
+$router.get('/super/respaldo/load',(rq,$rs)=>{
     if(rq.session.status===true){
         let log =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
             log += ' GET: /models/model/tree/super/respaldo/load';
@@ -1026,7 +1066,8 @@ $router.get('/super/respaldo/load',(rq,$rs,n)=>{
 
     } else $rs.sendStatus(404).end();
 });
-$router.put('/super/respaldo/restore/:dname',(rq,$rs,n)=>{
+// $router.put('/super/respaldo/restore/:dname':ok
+$router.put('/super/respaldo/restore/:dname',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let log = rq.params.dname;
@@ -1072,7 +1113,8 @@ $router.put('/super/respaldo/restore/:dname',(rq,$rs,n)=>{
             });
     }
 });
-$router.delete('/super/respaldo/delete/:dname',(rq,$rs,n)=>{
+// $router.delete('/super/respaldo/delete/:dname':ok
+$router.delete('/super/respaldo/delete/:dname',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let log = rq.params.dname;
@@ -1123,7 +1165,8 @@ $router.delete('/super/respaldo/delete/:dname',(rq,$rs,n)=>{
 });
 
 // Super descargas.
-$router.get('/super/descargas/load',(rq,$rs,n)=>{
+// $router.get('/super/descargas/load':ok
+$router.get('/super/descargas/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let log =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1165,7 +1208,8 @@ $router.get('/super/descargas/load',(rq,$rs,n)=>{
     } else $rs.sendStatus(404).end();
 
 });
-$router.get('/super/descargas/download/:dname',(rq,$rs,n)=>{
+// $router.get('/super/descargas/download/:dname':ok
+$router.get('/super/descargas/download/:dname',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let log = rq.params.dname;
@@ -1204,7 +1248,8 @@ $router.get('/super/descargas/download/:dname',(rq,$rs,n)=>{
     } else $rs.sendStatus(404).end();
 
 });
-$router.delete('/super/descargas/delete/:dname',(rq,$rs,n)=>{
+// $router.delete('/super/descargas/delete/:dname':ok
+$router.delete('/super/descargas/delete/:dname',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let log = rq.params.dname;
@@ -1236,7 +1281,8 @@ $router.delete('/super/descargas/delete/:dname',(rq,$rs,n)=>{
 });
 
 // Super Logs Auth.
-$router.get('/super/logauth/success/load',(rq,$rs,n)=>{
+// $router.get('/super/logauth/success/load':ok
+$router.get('/super/logauth/success/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1276,7 +1322,8 @@ $router.get('/super/logauth/success/load',(rq,$rs,n)=>{
     } else $rs.sendStatus(404).end();
 
 });
-$router.get('/super/logauth/errors/load',(rq,$rs,n)=>{
+// $router.get('/super/logauth/errors/load':ok
+$router.get('/super/logauth/errors/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1318,7 +1365,8 @@ $router.get('/super/logauth/errors/load',(rq,$rs,n)=>{
 });
 
 // Super Logs Tree.
-$router.get('/super/logtree/success/load',(rq,$rs,n)=>{
+// $router.get('/super/logtree/success/load':ok
+$router.get('/super/logtree/success/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1358,7 +1406,8 @@ $router.get('/super/logtree/success/load',(rq,$rs,n)=>{
     } else $rs.sendStatus(404).end();
 
 });
-$router.get('/super/logtree/errors/load',(rq,$rs,n)=>{
+// $router.get('/super/logtree/errors/load':ok
+$router.get('/super/logtree/errors/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1400,7 +1449,8 @@ $router.get('/super/logtree/errors/load',(rq,$rs,n)=>{
 });
 
 // Super Logs User.
-$router.get('/super/loguser/success/load',(rq,$rs,n)=>{
+//$router.get('/super/loguser/success/load':ok
+$router.get('/super/loguser/success/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;
@@ -1440,7 +1490,8 @@ $router.get('/super/loguser/success/load',(rq,$rs,n)=>{
     } else $rs.sendStatus(404).end();
 
 });
-$router.get('/super/loguser/errors/load',(rq,$rs,n)=>{
+// $router.get('/super/loguser/errors/load':ok
+$router.get('/super/loguser/errors/load',(rq,$rs)=>{
     if(rq.session.status===true){
 
         let logw =  rq.session.user.nombre + ' ' + rq.session.user.apellido;

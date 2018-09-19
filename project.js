@@ -51,10 +51,15 @@ var applicationElectron = $electron.app;
                         if(e===null){
                             applicationExpress.use($session({secret:'keyboard cat', resave:false, saveUninitialized:true, cookie:{secure:false,maxAge:3600000}}));
                             applicationExpress.use((rq,rs,n)=>{
-                                let type = rq.headers['content-type'] || '';
-                                    if(type==='boletin/html'){
-                                        rq.on('data',(p)=>{rq.rawBody+=p;});
-                                        rq.on('end',()=>{n();});
+                                let generator = rq.headers['content-generator'];
+                                let type      = rq.headers['content-type'];
+                                    if(generator==='legislatura/diario/boletin' && type==='text/plain; charset=UTF-8'){
+                                        let rawBody = ''; 
+                                            rq.on('data',(p)=>rawBody+=p);
+                                            rq.on('end',()=>{
+                                                rq.rawBody = rawBody;
+                                                n();
+                                            });
                                     } else n();
                             });
                             applicationExpress.use($bodyParser.json({limit:'100mb',extended:true,inflate:true}));
