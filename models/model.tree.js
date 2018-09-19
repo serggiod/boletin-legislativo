@@ -366,6 +366,118 @@ $router.post('/boletin/:periodoid',($rq,$rs)=>{
 
     } else $rs.sendStatus(404);
 });
+// $router.post('/boletin/:periodoid':ok
+$router.get('/boletin/:periodoid/:boletinid',($rq,$rs)=>{
+    if($rq.session.status===true) {
+
+        let periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+
+        let boletinid = $rq.params.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi);
+            boletinid = boletinid.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET /models/model/tree/boletin/' + periodoid + '/' + boletinid;
+
+        let where = new Object();
+            where.id = periodoid;
+
+            $db
+                .select('ONE')
+                .from('boletin')
+                .where(where)
+                .done((result,rows)=>{
+
+                    if(result===true){
+
+                        rows[0].item.push(json);
+
+                        $db
+                            .update('boletin')
+                            .set({item:$rows[0].item})
+                            .done(new Function());
+
+                        let fecha = json.fecha.split('-');
+                            fecha = fecha[2] + '/' + fecha[1] + '/' + fecha[0];
+    
+                        let desde = json.desde.split('-');
+                            desde = desde[2] + '/' + desde[1] + '/' + desde[0];
+    
+                        let hasta = json.hasta.split('-');
+                            hasta = hasta[2] + '/' + hasta[1] + '/' + hasta[0];
+    
+                        let periodoLegislativo     = json.periodo.toLowerCase();
+                            periodoLegislativo     = periodoLegislativo.replace('periodo','Periodo').replace('legislativo','Legislativo');
+                        
+                        let authpath = $path.join(__dirname,'/../database/autoridades.db');
+                        let autoridades = $fs.readFileSync(authpath,{encoding:'utf8'});
+                            autoridades = JSON.parse(autoridades);
+                            autoridades = autoridades[0];
+
+                        let $templatePath = $path.join(__dirname,'/../views/view.mdi.html.template.html');
+
+                        $fs.readFile($templatePath,{encoding:'utf8'},(error,data)=>{
+
+                            if(error===null){
+                    
+                                let html = data.toString();
+                                    html = html
+                                        .replace(/{{presidente}}/gi,autoridades.presidente)
+                                        .replace(/{{vicepresidente1}}/gi,autoridades.vicepresidente1)
+                                        .replace(/{{vicepresidente2}}/gi,autoridades.vicepresidente2)
+                                        .replace(/{{parlamentario}}/gi,autoridades.parlamentario)
+                                        .replace(/{{administrativo}}/gi,autoridades.administrativo)
+                                        .replace(/{{titleBoletin}}/gi,json.numero+'/'+json.anio)
+                                        .replace(/{{vignetaAnio}}/gi,json.anio)
+                                        .replace(/{{periodoLegislativo}}/gi,periodoLegislativo)
+                                        .replace(/{{periodoLegislativo}}/gi,periodoLegislativo)
+                                        .replace(/{{encabezadoBoletin}}/gi,json.numero + '/' + json.anio)
+                                        .replace(/{{encabezadoBoletin}}/gi,json.numero + '/' + json.anio)
+                                        .replace(/{{encabezadoDesde}}/gi,desde)
+                                        .replace(/{{encabezadoDesde}}/gi,desde)
+                                        .replace(/{{encabezadoHasta}}/gi,hasta)
+                                        .replace(/{{encabezadoHasta}}/gi,hasta)
+                                        .replace(/{{actividadPeriodo}}/gi,json.periodo)
+                                        .replace(/{{actividadAnio}}/gi,json.anio)
+                                        .replace(/{{actividadSession}}/gi,json.sesion + ' SESION ' + json.forma)
+                                        .replace(/{{actividadReunion}}/gi,json.reunion)
+                                        .replace(/{{actividadFecha}}/gi,fecha)
+                                        .replace(/{{actividadHora}}/gi,json.hora)
+                                        .replace(/{{actividadObservaciones}}/gi,json.observ);
+                    
+                                    let $boletinFile = json.numero + '-' + json.anio  + '.html';
+                                        $boletinFile = $path.join(__dirname,'/model.tree.js.files/html/',$boletinFile);
+                                        
+                                        $fs.writeFile($boletinFile,html,{encoding:'utf8'},(error)=>{
+
+                                            if(error===null){
+                                                $log
+                                                    .to('tree')
+                                                    .write(log,'success');
+                                                $rs.json({result:true,rows:json.id});
+                                            }
+                    
+                                            else {
+                                                $log
+                                                    .to('tree')
+                                                    .write(log,'errors');
+                                                $rs.sendStatus(404);
+                                            }
+                    
+                                        });
+                    
+                            } else $rs.sendStatus(200);
+                    
+                        });
+                        
+                    }
+
+                });
+
+    } else $rs.sendStatus(404);
+});
 //router.get('/boletin/:file/html':ok
 $router.get('/boletin/:file/html',(rq,$rs) => {
     if(rq.session.status===true){

@@ -840,7 +840,7 @@ var viewsApi = {
         if(parent!=0){
 
             let window = new dhtmlXWindows();
-                window.createWindow('window',0,0,400,280);
+                window.createWindow('window',0,0,430,300);
                 window.window('window').setText('Nueva Tarea');
                 window.window('window').setModal(true);
                 window.window('window').denyMove();
@@ -849,10 +849,12 @@ var viewsApi = {
                 window.window('window').center();
 
             let form = window.window('window').attachForm([
-                {type:'label',  label:'Titulo:'},
-                {type:'input',  name:'titulo', inputWith:400,required:true},
-                {type:'label',  label:'Descripción:'},
-                {type:'editor', name:'tarea',inputWith:400,inputHeight:80,required:true}
+                {type:'block',list:[
+                    {type:'label',label:'Tarea:'},
+                    {type:'input',name:'titulo',inputWidth:380,required:true},
+                    {type:'label',label:'Descripción:'},
+                    {type:'editor',name:'tarea',inputWidth:380,inputHeight:80,required:true}
+                ]}
             ]);
             form.enableLiveValidation(true);
             form.setFocusOnFirstActive();
@@ -862,33 +864,40 @@ var viewsApi = {
                     
                     window.window('window').progressOn();
                     
-                    let json = {
-                        titulo  : form.getItemValue('titulo').match(new RegExp('[0-9a-z\ ' + $this.chars + ']','gi')).join(''),
-                        tarea   : form.getItemValue('tarea').match(new RegExp('[0-9a-z\<\>\=\"\'\;\ ' + $this.chars + ']','gi')).join(''),
-                        indexp  : tree.getIndexById(parent),
-                        indexb  : tree.getIndexById(id)
-                    };
+                    let url  = '/models/model/tree/tarea/' + parent;
+                    
+                    let header = {'Content-Type':'application/json'};
 
-                    let url  = 'models/model/tree/tarea';
-                    dhx.ajax().post(url,json,(json)=>{
-                        json = JSON.parse(json);
-                        if(json.result===true){
-                            let url = 'models/model/tree/tareas/'
-                                url += tree.getIndexById(parent);
-                                url += '.';
-                                url += tree.getIndexById(id);
-                                list.clearAll();
-                                list.load(url,'json');
-                        }
-                        else dhtmlx.message({
-                            type:'alert-error',
-                            title:'ERROR',
-                            text:'No se pudo crear la Tarea.',
-                            ok:'Aceptar'
-                        });
-                        window.window('window').progressOff();
-                        window.window('window').close();
-                    });
+                    let tarea = new Object();
+                        tarea.titulo = form.getItemValue('titulo');
+                        tarea.titulo = tarea.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi)
+                        tarea.titulo = tarea.titulo.join('');
+                        tarea.tarea = form.getItemValue('tarea');
+                        tarea.tarea = tarea.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
+                        tarea.tarea = tarea.tarea.join(''),
+
+                    console.log(tree.getAllSubItems(parent));
+                    
+
+                        /*dhx.ajax().post(url,json,(json)=>{
+                            json = JSON.parse(json);
+                            if(json.result===true){
+                                let url = 'models/model/tree/tareas/'
+                                    url += tree.getIndexById(parent);
+                                    url += '.';
+                                    url += tree.getIndexById(id);
+                                    list.clearAll();
+                                    list.load(url,'json');
+                            }
+                            else dhtmlx.message({
+                                type:'alert-error',
+                                title:'ERROR',
+                                text:'No se pudo crear la Tarea.',
+                                ok:'Aceptar'
+                            });
+                            window.window('window').progressOff();
+                            window.window('window').close();
+                        });*/
 
                 } else dialog.showErrorBox('Error','Los campos del formulario no son válidos.');
             };
