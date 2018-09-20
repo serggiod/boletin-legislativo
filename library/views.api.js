@@ -1038,22 +1038,33 @@ var viewsApi = {
     },
 
     // Exportar.
+    //exportarAWORD:ok
     exportarAWORD : () => {
         let id = tree.getSelectedItemId();
         let name = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
+
         if(parent!=0){
+
             mdi.progressOn();
-            let url = 'models/model/tree/exportar/word/' + name;
-                dhx.ajax().post(url,null,(json)=>{
-                    mdi.progressOff();
-                    json = JSON.parse(json);
-                    if(json.result===true){
-                        let a = document.createElement('A');
-                            a.href = url;
-                            a.click();
-                    } else dhtmlx.message({text:'No se pudo exportar el Boletín en WORD.',tipe:'error'});
-                });
+
+            let url = '/models/model/tree/exportar/word/' + name;
+
+            let header = {'Content-Type':'application/json'};
+
+                $ajax
+                    .header(header)
+                    .post(url,(json)=>{
+
+                        if(json.result===true){
+                            let a = document.createElement('A');
+                                a.href = url;
+                                a.click();
+                                mdi.progressOff();
+                        }
+                        
+                        else dhtmlx.message({text:'No se pudo exportar el Boletín en WORD.',tipe:'error'});
+                    });
         }
     },
     exportarAWEB : () => {
@@ -1085,17 +1096,26 @@ var viewsApi = {
         let name = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
         if(parent!=0){
-            mdi.progressOn();
-            let url = 'models/model/tree/exportar/pdf/' + name;
-                dhx.ajax().post(url,null,(json)=>{
-                    mdi.progressOff();
-                    json = JSON.parse(json);
-                    if(json.result===true){
-                        let a = document.createElement('A');
-                            a.href = url;
-                            a.click();
-                    } else dhtmlx.message({text:'No se pudo exportar el Boletín en PDF.',tipe:'error'});
-                });
+
+            let header = {'Content-Type':'application/json'};
+            let url = '/models/model/tree/exportar/pdf/' + name;
+
+                mdi.progressOn();
+
+                $ajax
+                    .header(header)
+                    .post(url,(json)=>{
+                        
+                        if(json.result===true){
+
+                            let a = document.createElement('A');
+                                a.href = url;
+                                a.click();
+
+                        } else dhtmlx.message({text:'No se pudo exportar el Boletín en PDF.',type:'error'});
+
+                        mdi.progressOff();
+                    });
         }
     }
     

@@ -871,60 +871,105 @@ $router.delete('/tarea/:periodoid/:boletinid/:index',($rq,$rs) => {
 });
 
 // Exportar.
-/*router.post('/exportar/word/:file',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let path = __dirname + '/model.tree.js.files/word/';
-        
-        let file = rq.params.file.match(/[0-9\-]/g).join('');
-        
-        let html  = fs.readFileSync(__dirname + '/model.tree.js.files/html/' + file + '.html',{encoding:'utf8'});
-            html = html.replace(/size="4"/g,'size="3"')
-                .replace(/size="3"/g,'size="2"')
-                .replace(/size="2"/g,'size="1"')
-                .replace(/width="160px"/g,'width="110px"')
-                .replace(/width="70px"/g,'width="40px"')
-                .replace(/width="65px"/g,'width="45px"');
+// $router.post('/exportar/word/:file:ok
+$router.post('/exportar/word/:file',($rq,$rs)=>{
+    if($rq.session.status===true){
 
-            let docx = HtmlDocx.asBlob(html);
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/g);
+            file = file.join('');
 
-                fs.writeFile(path + file + '.docx',docx, function (e){
-                    if(e===null){
-                        fs.chmod(path+file+'.docx','755',(e)=>{
-                            let user = rq.session.user;
-                            let text = user.apellido + ' ' + user.nombre + ' POST: /models/model/tree/exportar/word/' + file + '.';
-                            let pathg = '';
-                                if(e===null) pathg = __dirname + '/model.tree.js.logs/success.log';
-                                else pathg = __dirname + '/model.tree.js.logs/errors.log';
-                                log.set(pathg,text);
-                                if(e===null) rs.send({result:true,rows:null});
-                                else $rs.send({result:false,rows:null});
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' POST /models/model/tree/exportar/word/' +  file;
+
+        let path = file + '.html';
+            path = $path.join(__dirname,'/model.tree.js.files/html/',path);
+        
+        let pathw = file + '.docx';
+            pathw = $path.join(__dirname,'/model.tree.js.files/word/',pathw);
+        
+            $fs.readFile(path,{encoding:'utf8'},(error,html)=>{
+                if(error===null){
+                    html = html
+                            .replace(/size="4"/g,'size="3"')
+                            .replace(/size="3"/g,'size="2"')
+                            .replace(/size="2"/g,'size="1"')
+                            .replace(/width="160px"/g,'width="110px"')
+                            .replace(/width="70px"/g,'width="40px"')
+                            .replace(/width="65px"/g,'width="45px"');
+                    
+                    let docx = $HtmlDocx.asBlob(html);
+
+                        $fs.writeFile(pathw,docx, function (error){
+
+                            if(error===null){
+                                
+                                $log
+                                    .to('tree')
+                                    .write(log,'success');
+                                $rs.json({result:true,rows:null});
+
+                            }
+                            
+                            else {
+
+                                $log
+                                    .to('tree')
+                                    .write(log,'errors');
+                                $rs.sendStatus(404);
+                            }
+
                         });
-                    } else $rs.send({result:false,rows:null}); 
-                });
-    } else $rs.status(404).send(); 
+
+                }
+            });
+
+    } else $rs.sendStatus(404)(); 
 });
-router.get('/exportar/word/:file',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let path = __dirname + '/model.tree.js.files/word/';
-        let file = rq.params.file.match(/[0-9\-]/g).join('');
-        let word = fs.readFileSync(path + file + '.docx','binary');
+// $router.get('/exportar/word/:file:ok
+$router.get('/exportar/word/:file',($rq,$rs)=>{
+    if($rq.session.status===true){
 
-        let user = rq.session.user;
-        let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/exportar/word/' + file + '.';
-        let pathf = '';
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/gi);
+            file = file.join('');
 
-            if(word) pathf = __dirname + '/model.tree.js.logs/success.log';
-            else pathf = __dirname + '/model.tree.js.logs/errors.log';
-            log.set(pathf,text);
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET /models/model/tree/exportar/word/' + file;
 
-            rs.setHeader('Content-Type','application/msword');
-            rs.setHeader('Content-Length',word.length);
-            rs.setHeader('Content-Disposition','attachment; filename='+file+'.docx'); 
-            rs.write(word, 'binary');
-            rs.end();
-    } else $rs.status(404).send();
+        let pathw = file + '.docx';
+            pathw = $path.join(__dirname,'/model.tree.js.files/word/',pathw);
+
+            $fs.readFile(pathw,'binary',(error,word)=>{
+                
+                if(error===null){
+
+                    $log
+                        .to('tree')
+                        .write(log,'success');
+
+                    $rs.setHeader('Content-Type','application/msword');
+                    $rs.setHeader('Content-Length',word.length);
+                    $rs.setHeader('Content-Disposition','attachment; filename='+file+'.docx'); 
+                    $rs.write(word, 'binary');
+                    $rs.end();
+                }
+
+                else {
+
+                    $log
+                        .to('tree')
+                        .write(log,'errors');
+
+                    $rs.sendStatus(404);
+
+                }
+
+            });
+
+    } else $rs.sendStatus(404);
 });
-router.post('/exportar/web/:file',(rq,rs,n)=>{
+/*router.post('/exportar/web/:file',(rq,rs,n)=>{
     if(rq.session.status===true){
         let elements = rq.params.file.match(/[0-9\-\.]/g).join('').split('.');
         let path  = 'item[';
@@ -990,12 +1035,24 @@ router.post('/exportar/web/:file',(rq,rs,n)=>{
                 }
             });
     } else $rs.status(404).send();
-});
-router.post('/exportar/pdf/:file',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let path = __dirname + '/model.tree.js.files/pdf/';
+});*/
+$router.post('/exportar/pdf/:file',($rq,$rs)=>{
+    if($rq.session.status===true){
+
+        let file = rq.params.file;
+            file = file.match(/[0-9\-]/g);
+            file = file.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' POST /models/model/tree/exportar/pdf/' + file;
+
+        let path = file + '.html';
+            path = $path.join(__dirname + '/model.tree.js.files/html/',path);
+
+        let pathp = file + '.pdf';
+            pathp = $path.join(__dirname + '/model.tree.js.files/pdf/',pathp);
         
-        let file = rq.params.file.match(/[0-9\-]/g).join('');
+        
         
         let html = fs.readFileSync(__dirname + '/model.tree.js.files/html/' + file + '.html',{encoding:'utf8'});
             html = html.replace(/size="4"/gm,'size="3"')
@@ -1063,7 +1120,7 @@ router.get('/exportar/pdf/:file',(rq,rs,n)=>{
     } else $rs.status(404).send();
 });
 
-// Remoto.
+/*// Remoto.
 router.get('/remote/boletines',(rq,rs,n)=>{
     if(rq.session.status===true){
         let sql = "CALL electronjsDDSBoletines();";
