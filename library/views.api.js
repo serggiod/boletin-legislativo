@@ -492,15 +492,12 @@ var viewsApi = {
         let parent = tree.getParentId(id);
         if(parent!=0){
             let urlb = '/models/model/tree/boletin/' + text + '/html';
-            let urlt = '/models/model/tree/tareas/';
-                //urlt += tree.getIndexById(parent);
-                //urlt += '.';
-                //urlt += tree.getIndexById(id);
-            mdi.cells('c').attachURL(urlb,false);
-            list.clearAll();
-            list.load(urlt,'json',()=>{
-                mdi.cells('b').cell.childNodes.item(1).childNodes.item(0).style.overflowY='scroll';
-            });
+            let urlt = '/models/model/tree/tareas/' + parent + '/' +id;
+                mdi.cells('c').attachURL(urlb,false);
+                list.clearAll();
+                list.load(urlt,'json',()=>{
+                    //mdi.cells('b').cell.childNodes.item(1).childNodes.item(0).style.overflowY='scroll';
+                });
         }
     },
     //boletinGuardar:ok
@@ -832,6 +829,7 @@ var viewsApi = {
     },
 
     // Tareas.
+    //tareaNueva:ok
     tareaNueva : () => {
 
         let id = tree.getSelectedItemId();
@@ -864,42 +862,41 @@ var viewsApi = {
                     
                     window.window('window').progressOn();
                     
-                    let url  = '/models/model/tree/tarea/' + parent;
+                    let url  = '/models/model/tree/tarea/' + parent + '/' + id;
                     
                     let header = {'Content-Type':'application/json'};
 
-                    let tarea = new Object();
-                        tarea.titulo = form.getItemValue('titulo');
-                        tarea.titulo = tarea.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi)
-                        tarea.titulo = tarea.titulo.join('');
-                        tarea.tarea = form.getItemValue('tarea');
-                        tarea.tarea = tarea.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
-                        tarea.tarea = tarea.tarea.join(''),
+                    let body = new Object();
+                        body.titulo = form.getItemValue('titulo');
+                        body.titulo = body.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi)
+                        body.titulo = body.titulo.join('');
+                        body.tarea = form.getItemValue('tarea');
+                        body.tarea = body.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
+                        body.tarea = body.tarea.join(''),
 
-                    console.log(tree.getAllSubItems(parent));
-                    
+                        $ajax
+                            .header(header)
+                            .body(body)
+                            .post(url,(json)=>{
 
-                        /*dhx.ajax().post(url,json,(json)=>{
-                            json = JSON.parse(json);
-                            if(json.result===true){
-                                let url = 'models/model/tree/tareas/'
-                                    url += tree.getIndexById(parent);
-                                    url += '.';
-                                    url += tree.getIndexById(id);
-                                    list.clearAll();
-                                    list.load(url,'json');
-                            }
-                            else dhtmlx.message({
-                                type:'alert-error',
-                                title:'ERROR',
-                                text:'No se pudo crear la Tarea.',
-                                ok:'Aceptar'
+                                if(json.result===true){
+                                    dhtmlx.message({text:'La tarea fue agregada a este Boletín.'});
+                                    list.add(body);
+                                }
+
+                                else dhtmlx.message({
+                                    type:'alert-error',
+                                    title:'ERROR',
+                                    text:'No se pudo crear la Tarea.',
+                                    ok:'Aceptar'
+                                });
+
+                                window.window('window').progressOff();
+                                window.window('window').close();
+
                             });
-                            window.window('window').progressOff();
-                            window.window('window').close();
-                        });*/
 
-                } else dialog.showErrorBox('Error','Los campos del formulario no son válidos.');
+                }
             };
 
             let toolbar = window.window('window').attachToolbar();
@@ -916,8 +913,8 @@ var viewsApi = {
                 
         }
     },
+    //tareaModificar:ok
     tareaModificar : () => {
-        let $this = $exe;
         let id = tree.getSelectedItemId();
         let parent = tree.getParentId(id);
             if(parent!=0){
@@ -926,7 +923,7 @@ var viewsApi = {
                     let idt = list.getSelected();
                     let tarea = list.get(idt);
                     let window = new dhtmlXWindows();
-                        window.createWindow('window',0,0,330,270);
+                        window.createWindow('window',0,0,430,300);
                         window.window('window').setText('Modificar Tarea');
                         window.window('window').setModal(true);
                         window.window('window').denyMove();
@@ -935,10 +932,12 @@ var viewsApi = {
                         window.window('window').center();
         
                     let form = window.window('window').attachForm([
-                            {type:'label',  label:'Titulo:'},
-                            {type:'input',  name:'titulo', inputWidth:300, required:true, value:tarea.titulo},
-                            {type:'label',  label:'Tarea:'},
-                            {type:'editor', name:'tarea',  inputWidth:300, inputHeight:80, required:true, value:tarea.tarea}
+                            {type:'block',list:[
+                                {type:'label',label:'Tarea:'},
+                                {type:'input',name:'titulo',inputWidth:380,required:true,value:tarea.titulo},
+                                {type:'label',label:'Descripción:'},
+                                {type:'editor',name:'tarea',inputWidth:380,inputHeight:80,required:true,value:tarea.tarea}
+                            ]}
                         ]);
                         form.enableLiveValidation(true);
                         form.setFocusOnFirstActive();
@@ -946,28 +945,46 @@ var viewsApi = {
                     let formEventAceptar = () => {
                         if(form.validate()===true){
                             window.window('window').progressOn();
-                            let json = new Object();
-                                json.titulo = form.getItemValue('titulo').match(new RegExp('[0-9a-z\ ' + $this.chars + ']','gi')).join('');
-                                json.tarea  = form.getItemValue('tarea').match(new RegExp('[0-9a-z\<\>\=\"\'\;\ ' + $this.chars + ']','gi')).join('');
-                                json.indexp = tree.getIndexById(parent);
-                                json.indexb = tree.getIndexById(id);
-                                json.indext = list.indexById(idt);
-                                json = JSON.stringify(json);
-                            let url  = '/models/model/tree/tarea';
-                                dhx.ajax().put(url,json,(json)=>{
-                                    json = JSON.parse(json);
-                                    if(json.result===true){
-                                        let url = '/models/model/tree/tareas/'
-                                            url += tree.getIndexById(parent);
-                                            url += '.';
-                                            url += tree.getIndexById(id);
-                                            list.clearAll();
-                                            list.load(url,'json');
-                                    }else dialog.showErrorBox('Error','No se pudo editar la Tarea.');
-                                    window.window('window').progressOff();
-                                    window.window('window').close();
-                                });
-                        } else dialog.showErrorBox('Error','Los campos del formulario no son válidos.');
+
+                            let header = {'Content-Type':'application/json'};
+
+                            let body = new Object();
+                                body.titulo = form.getItemValue('titulo')
+                                body.titulo = body.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi);
+                                body.titulo = body.titulo.join('');
+                                body.tarea  = form.getItemValue('tarea');
+                                body.tarea  = body.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
+                                body.tarea  = body.tarea.join('');
+                                body.index  = list.indexById(idt);
+
+                            let url  = '/models/model/tree/tarea/' + parent + '/' + id;
+
+                                $ajax
+                                    .header(header)
+                                    .body(body)
+                                    .put(url,(json)=>{
+
+                                        if(json.result===true){
+                                            let url = '/models/model/tree/tareas/' + parent + '/' + id;
+                                                list.clearAll();
+                                                list.load(url,'json');
+                                                dhtmlx.message({text:'La Tarea se modificó en forma correcta.'});
+                                        }
+
+                                        else dhtmlx.message({
+                                            type:'alert-error',
+                                            title:'ERROR',
+                                            text:'No se pudo modificar la Tarea.',
+                                            ok:'Aceptar'
+                                        });
+                                    
+                                        window.window('window').progressOff();
+                                        window.window('window').close();
+
+                                    });
+
+                        }
+
                     };
                     let toolbar = window.window('window').attachToolbar();
                         toolbar.loadStruct([
@@ -983,28 +1000,38 @@ var viewsApi = {
                 }
             }
     },
+    // tareaEliminar:ok
     tareaEliminar : () => {
         let id = tree.getSelectedItemId();
         let parent = tree.getParentId(id);
         if(parent!=0){
             if(confirm('¿Esta seguro que desea eliminar esta Tarea?')){
                 let idt = list.getSelected();
-                let url = 'models/model/tree/tarea';
-                let json = new Object();
-                    json.indexp = tree.getIndexById(parent);
-                    json.indexb = tree.getIndexById(id);
-                    json.indext = list.indexById(idt);
-                    json = JSON.stringify(json);
-                    dhx.ajax().del(url,json,(json) => {
-                        json = JSON.parse(json);
-                        if(json.result===true){
-                            let url = 'models/model/tree/tareas/'
-                                url += tree.getIndexById(parent);
-                                url += '.';
-                                url += tree.getIndexById(id);
-                                list.clearAll();
-                                list.load(url,'json');
-                        } else dialog.showErrorBox('Error','No se pudo eliminar la Tarea.');
+
+                let index = list.indexById(idt);
+
+                let header = {'Content-Type':'application/json'};
+
+                let url = '/models/model/tree/tarea/' + parent + '/' + id + '/' + index;
+
+                    $ajax
+                        .header(header)
+                        .delete(url,(json) => {
+
+                            if(json.result===true){
+                                let url = '/models/model/tree/tareas/' + parent + '/' + id;
+                                    list.clearAll();
+                                    list.load(url,'json');
+                                    dhtmlx.message({text:'La Tarea se eliminó en forma correcta.'});
+                            }
+                            
+                            else dhtmlx.message({
+                                type:'alert-error',
+                                title:'ERROR',
+                                text:'No se pudo eliminar la Tarea.',
+                                ok:'Aceptar'
+                            });
+
                     });
             }
         }

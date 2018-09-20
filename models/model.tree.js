@@ -366,118 +366,6 @@ $router.post('/boletin/:periodoid',($rq,$rs)=>{
 
     } else $rs.sendStatus(404);
 });
-// $router.post('/boletin/:periodoid':ok
-$router.get('/boletin/:periodoid/:boletinid',($rq,$rs)=>{
-    if($rq.session.status===true) {
-
-        let periodoid = $rq.params.periodoid;
-            periodoid = periodoid.match(/[a-z0-9]/gi);
-            periodoid = periodoid.join('');
-
-        let boletinid = $rq.params.boletinid;
-            boletinid = boletinid.match(/[a-z0-9]/gi);
-            boletinid = boletinid.join('');
-
-        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
-            log = log + ' GET /models/model/tree/boletin/' + periodoid + '/' + boletinid;
-
-        let where = new Object();
-            where.id = periodoid;
-
-            $db
-                .select('ONE')
-                .from('boletin')
-                .where(where)
-                .done((result,rows)=>{
-
-                    if(result===true){
-
-                        rows[0].item.push(json);
-
-                        $db
-                            .update('boletin')
-                            .set({item:$rows[0].item})
-                            .done(new Function());
-
-                        let fecha = json.fecha.split('-');
-                            fecha = fecha[2] + '/' + fecha[1] + '/' + fecha[0];
-    
-                        let desde = json.desde.split('-');
-                            desde = desde[2] + '/' + desde[1] + '/' + desde[0];
-    
-                        let hasta = json.hasta.split('-');
-                            hasta = hasta[2] + '/' + hasta[1] + '/' + hasta[0];
-    
-                        let periodoLegislativo     = json.periodo.toLowerCase();
-                            periodoLegislativo     = periodoLegislativo.replace('periodo','Periodo').replace('legislativo','Legislativo');
-                        
-                        let authpath = $path.join(__dirname,'/../database/autoridades.db');
-                        let autoridades = $fs.readFileSync(authpath,{encoding:'utf8'});
-                            autoridades = JSON.parse(autoridades);
-                            autoridades = autoridades[0];
-
-                        let $templatePath = $path.join(__dirname,'/../views/view.mdi.html.template.html');
-
-                        $fs.readFile($templatePath,{encoding:'utf8'},(error,data)=>{
-
-                            if(error===null){
-                    
-                                let html = data.toString();
-                                    html = html
-                                        .replace(/{{presidente}}/gi,autoridades.presidente)
-                                        .replace(/{{vicepresidente1}}/gi,autoridades.vicepresidente1)
-                                        .replace(/{{vicepresidente2}}/gi,autoridades.vicepresidente2)
-                                        .replace(/{{parlamentario}}/gi,autoridades.parlamentario)
-                                        .replace(/{{administrativo}}/gi,autoridades.administrativo)
-                                        .replace(/{{titleBoletin}}/gi,json.numero+'/'+json.anio)
-                                        .replace(/{{vignetaAnio}}/gi,json.anio)
-                                        .replace(/{{periodoLegislativo}}/gi,periodoLegislativo)
-                                        .replace(/{{periodoLegislativo}}/gi,periodoLegislativo)
-                                        .replace(/{{encabezadoBoletin}}/gi,json.numero + '/' + json.anio)
-                                        .replace(/{{encabezadoBoletin}}/gi,json.numero + '/' + json.anio)
-                                        .replace(/{{encabezadoDesde}}/gi,desde)
-                                        .replace(/{{encabezadoDesde}}/gi,desde)
-                                        .replace(/{{encabezadoHasta}}/gi,hasta)
-                                        .replace(/{{encabezadoHasta}}/gi,hasta)
-                                        .replace(/{{actividadPeriodo}}/gi,json.periodo)
-                                        .replace(/{{actividadAnio}}/gi,json.anio)
-                                        .replace(/{{actividadSession}}/gi,json.sesion + ' SESION ' + json.forma)
-                                        .replace(/{{actividadReunion}}/gi,json.reunion)
-                                        .replace(/{{actividadFecha}}/gi,fecha)
-                                        .replace(/{{actividadHora}}/gi,json.hora)
-                                        .replace(/{{actividadObservaciones}}/gi,json.observ);
-                    
-                                    let $boletinFile = json.numero + '-' + json.anio  + '.html';
-                                        $boletinFile = $path.join(__dirname,'/model.tree.js.files/html/',$boletinFile);
-                                        
-                                        $fs.writeFile($boletinFile,html,{encoding:'utf8'},(error)=>{
-
-                                            if(error===null){
-                                                $log
-                                                    .to('tree')
-                                                    .write(log,'success');
-                                                $rs.json({result:true,rows:json.id});
-                                            }
-                    
-                                            else {
-                                                $log
-                                                    .to('tree')
-                                                    .write(log,'errors');
-                                                $rs.sendStatus(404);
-                                            }
-                    
-                                        });
-                    
-                            } else $rs.sendStatus(200);
-                    
-                        });
-                        
-                    }
-
-                });
-
-    } else $rs.sendStatus(404);
-});
 //router.get('/boletin/:file/html':ok
 $router.get('/boletin/:file/html',(rq,$rs) => {
     if(rq.session.status===true){
@@ -701,121 +589,289 @@ $router.delete('/boletin/:periodoid/:boletinid/:boletinfile', (rq,$rs) => {
 
 
 // Tareas.
-$router.post('/tarea',($rq,$rs) => {
-    if(rq.session.status===true){
-        let model  = db.getModel('boletin');
-        let indexp = rq.body.indexp.match(/[0-9]/g).join('');
-        let indexb = rq.body.indexb.match(/[0-9]/g).join('');
-        let indext = model.item[indexp].item[indexb].tareas.length;
-        let tarea  = new Object();
-            tarea.titulo = rq.body.titulo.match(new RegExp('[0-9a-z\ ' + chars + ']','gi')).join('');
-            tarea.tarea = rq.body.tarea.match(new RegExp('[0-9a-z\<\>\"\'\=\;\ ' + chars + ']','gi')).join('');
-        let path  = 'item[';
-            path += indexp;
-            path += ']';
-            path += '.item[';
-            path += indexb;
-            path += '].tareas[';
-            path += indext
-            path += ']'; 
-            db.insert({
-                model:'boletin',
-                path:path,
-                value:tarea,
-                callback:(bol,regs)=>{
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' POST: /models/model/tree/tarea.';
-                    let path = '';
-                        if(bol) path = __dirname + '/model.tree.js.logs/success.log';
-                        else path = __dirname + '/model.tree.js.logs/errors.log';
-                        log.set(path,text);
-                    rs.send({result:bol,rows:regs});
-                }
-            });
-    } else $rs.status(404).send();
-});
-/*router.get('/tareas/:indexes',  (rq, rs, n) => {
-    if(rq.session.status===true){
-        let indexes = rq.params.indexes.match(/[0-9.]/g).join('').split('.');
-        let path = 'item[';
-            path += indexes[0];
-            path += '].item[';
-            path += indexes[1];
-            path += '].tareas';
-            db.select({
-                model:'boletin',
-                path:path,
-                callback:(bol,regs)=>{
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/tareas/' + indexes.join('.') + '.';
-                    let path = '';
-                        if(bol) path = __dirname + '/model.tree.js.logs/success.log';
-                        else path = __dirname + '/model.tree.js.logs/errors.log';
-                        log.set(path,text);
-                        rs.send(regs);
-                }
-            });
-    } else $rs.status(404).send();
-});
-router.put('/tarea',(rq, rs, n) => {
-    if(rq.session.status===true){
-        rq.body = JSON.parse(rq.body);
+//$router.post('/tarea/:periodoid/:boletinid':ok
+$router.post('/tarea/:periodoid/:boletinid',($rq,$rs) => {
+    if($rq.session.status===true){
+
+        let periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+
+        let boletinid = $rq.params.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi);
+            boletinid = boletinid.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' POST /tarea/' + periodoid + '/' + boletinid;
+
         let tarea = new Object();
-            tarea.titulo = rq.body.titulo.match(new RegExp('[0-9a-z\ ' + chars + ']','gi')).join('');
-            tarea.tarea = rq.body.tarea.match(new RegExp('[0-9a-z\<\>\"\'\=\;\ ' + chars + ']','gi')).join('');
-        let path  = 'item[';
-            path += rq.body.indexp.toString().match(/[0-9]/g).join('');
-            path += ']';
-            path += '.item[';
-            path += rq.body.indexb.toString().match(/[0-9]/g).join('');
-            path += '].tareas[';
-            path += rq.body.indext.toString().match(/[0-9]/g).join('');
-            path += ']';
-            db.update({
-                model:'boletin',
-                path:path,
-                value:tarea,
-                callback:(bol,regs) => {
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' PUT: /models/model/tree/tarea.';
-                    let path = '';
-                        if(bol) path = __dirname + '/model.tree.js.logs/success.log';
-                        else path = __dirname + '/model.tree.js.logs/errors.log';
-                        log.set(path,text);
-                        rs.send({result:bol,rows:regs});
+            tarea.titulo = $rq.body.titulo;
+            tarea.titulo = tarea.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi);
+            tarea.titulo = tarea.titulo.join('');
+            tarea.tarea = $rq.body.tarea;
+            tarea.tarea = tarea.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
+            tarea.tarea = tarea.tarea.join('');
+
+        let where = new Object();
+            where.id = periodoid;
+
+        $db
+            .select('ONE')
+            .from('boletin')
+            .where(where)
+            .done((result,rows)=>{
+
+                if(result===true){
+
+                    let item = rows[0].item;
+
+                        for(x in item){
+                            if(item[x].id===boletinid) item[x].tareas.push(tarea);
+                        }
+
+                        $db
+                            .update('boletin')
+                            .set({item:item})
+                            .done((result,rows)=>{
+
+                                if(result===true){
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'success');
+
+                                    $rs.json({result:true,rows:null});
+
+                                }
+                                
+                                else {
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'errors');
+
+                                    $rs.sendStatus(404);
+
+                                }
+
+                            });
                 }
+
             });
-    } else $rs.status(404).send();
+
+    } else $rs.sendStatus(404);
 });
-router.delete('/tarea',(rq, rs, n) => {
-    if(rq.session.status===true){
-        rq.body = JSON.parse(rq.body);
-        let path  = 'item[';
-            path += rq.body.indexp.toString().match(/[0-9]/g).join('');
-            path += ']';
-            path += '.item[';
-            path += rq.body.indexb.toString().match(/[0-9]/g).join('');
-            path += '].tareas[';
-            path += rq.body.indext.toString().match(/[0-9]/g).join('');
-            path += ']';
-            db.delete({
-                model:'boletin',
-                path:path,
-                callback:(bol,regs)=>{
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' DELETE: /models/model/tree/tarea.';
-                    let path = '';
-                        if(bol) path = __dirname + '/model.tree.js.logs/success.log';
-                        else path = __dirname + '/model.tree.js.logs/errors.log';
-                        log.set(path,text);
-                        rs.send({result:bol,rows:regs});
+//$router.get('/tareas/:periodoid/:boletinid:ok
+$router.get('/tareas/:periodoid/:boletinid',  ($rq,$rs) => {
+    if($rq.session.status===true){
+
+        let periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+
+        let boletinid = $rq.params.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi);
+            boletinid = boletinid.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET /models/model/tree/tarea/' + periodoid + '/' + boletinid;
+
+        let where = new Object();
+            where.id = periodoid;
+
+        $db
+            .select('ONE')
+            .from('boletin')
+            .where(where)
+            .done((result,rows)=>{
+
+                if(result===true) {
+
+                    for(x in rows[0].item) {
+                        if(rows[0].item[x].id===boletinid) {
+
+                            $log
+                                .to('tree')
+                                .write(log,'success');
+
+                            $rs.json(rows[0].item[x].tareas);
+
+                        }
+                    }
+
                 }
+
+                else {
+
+                    $log
+                        .to('tree')
+                        .write(log,'errors');
+
+                    $rs.sendStatus(404);
+
+                }
+
             });
-    } else $rs.status(404).send();
+
+    } else $rs.senStatus(404);
+});
+//$router.put('/tarea/:periodoid/:boletinid:ok
+$router.put('/tarea/:periodoid/:boletinid',($rq,$rs) => {
+    if($rq.session.status===true){
+        
+        let periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+
+        let boletinid = $rq.params.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi);
+            boletinid = boletinid.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' PUT /models/model/tree/tarea/' + periodoid + '/' +boletinid;
+
+        let tarea = new Object();
+            tarea.titulo = $rq.body.titulo;
+            tarea.titulo = tarea.titulo.match(/[0-9a-zàèìòùÀÈÌÒÙñÑ\.\,\;\ ]/gi);
+            tarea.titulo = tarea.titulo.join('');
+            tarea.tarea = $rq.body.tarea;
+            tarea.tarea = tarea.tarea.match(/[0-9a-záéíóúÁÉÍÓÚñÑ\<\>\=\"\'\.\,\;\ ]/gi);
+            tarea.tarea = tarea.tarea.join('');
+
+        let index = $rq.body.index;
+            index = index.toString();
+            index = index.match(/[0-9]/gi);
+            index = index.join('');
+
+        let where = new Object();
+            where.id = periodoid;
+
+            $db
+                .select('ONE')
+                .from('boletin')
+                .where(where)
+                .done((result,rows)=>{
+
+                    if(result===true){
+
+                        result = false;
+
+                        for(x in rows[0].item){
+
+                            if(rows[0].item[x].id===boletinid){
+
+                                rows[0].item[x].tareas[index] = tarea;
+                                result = true;
+
+                            }
+
+                        }
+
+                        if(result===true){
+
+                            $db
+                                .update('boletin')
+                                .set({item:rows[0].item})
+                                .done((result,rows)=>{
+
+                                    if(result===true){
+
+                                        $log
+                                            .to('tree')
+                                            .write(log,'success');
+                                        $rs.json({result:true,rows:null});
+
+                                    }
+
+                                    else {
+
+                                        $log
+                                            .to('tree')
+                                            .write(log,'errors');
+                                        $rs.sendStatus(404);
+
+                                    }
+
+                                })
+                        }
+
+                    }
+
+                });
+
+    } else $rs.sendStatus(404);
+});
+// $router.delete('/tarea/:periodoid/:boletinid/:index:ok
+$router.delete('/tarea/:periodoid/:boletinid/:index',($rq,$rs) => {
+    if($rq.session.status===true){
+
+        let periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+
+        let boletinid = $rq.params.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi)
+            boletinid = boletinid.join('');
+
+        let index = $rq.params.index;
+            index = index.match(/[a-z0-9]/gi);
+            index = index.join('');
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' DELETE /models/model/tree/' + periodoid + '/' + boletinid + '/' + index;
+
+        let where = new Object();
+            where.id = periodoid;
+
+            $db
+                .select('ONE')
+                .from('boletin')
+                .where(where)
+                .done((result,rows)=>{
+                    if(result===true){
+
+                        for(x in rows[0].item){
+                            if(rows[0].item[x].id===boletinid){
+                                let tareas = new Array();
+                                    for(i in rows[0].item[x].tareas){
+                                        if(i!=index) tareas.push(rows[0].item[x].tareas[i]);
+                                    }
+                                    rows[0].item[x].tareas = tareas;
+                            }
+                        }
+
+                        $db
+                            .update('boletin')
+                            .set({item:rows[0].item})
+                            .done((result,rows)=>{
+
+                                if(result===true){
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'success');
+                                    $rs.json({result:true,rows:null});
+
+                                }
+
+                                else {
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'errors');
+                                    $rs.sendStatus(404);
+
+                                }
+
+                            });
+                    }
+                });
+
+    } else $rs.sendStatus(404);
 });
 
 // Exportar.
-router.post('/exportar/word/:file',(rq,rs,n)=>{
+/*router.post('/exportar/word/:file',(rq,rs,n)=>{
     if(rq.session.status===true){
         let path = __dirname + '/model.tree.js.files/word/';
         

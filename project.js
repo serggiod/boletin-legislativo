@@ -104,23 +104,3 @@ var applicationElectron = $electron.app;
         } else winLogin.create();
 
     });
-
-    // Form Mdi logout and close.
-    //$event.on('form-mdi-logout-logout',winMdi.functions.logoutLogout);
-
-    // Form Mdi Super.
-    /*if($mode.mode==='server'){
-        $event.on('form-mdi-super-respaldos-load',    winMdi.functions.formMdiSuperRespaldosLoad);
-        $event.on('form-mdi-super-respaldos-restore', winMdi.functions.formMdiSuperRespaldosRestore);
-        $event.on('form-mdi-super-respaldos-delete',  winMdi.functions.formMdiSuperRespaldosDelete);
-        
-        $event.on('form-mdi-super-descargas-load',     winMdi.functions.formMdiSuperDescargasLoad);
-        $event.on('form-mdi-super-descargas-delete',   winMdi.functions.formMdiSuperDescargasDelete);
-
-        $event.on('form-mdi-super-logauth-success-load', winMdi.functions.formMdiSuperLogauthSuccessLoad);
-        $event.on('form-mdi-super-logauth-error-load',   winMdi.functions.formMdiSuperLogauthErrorLoad);
-        $event.on('form-mdi-super-logtree-success-load', winMdi.functions.formMdiSuperLogtreeSuccessLoad);
-        $event.on('form-mdi-super-logtree-error-load',   winMdi.functions.formMdiSuperLogtreeErrorLoad);
-        $event.on('form-mdi-super-loguser-success-load', winMdi.functions.formMdiSuperLoguserSuccessLoad);
-        $event.on('form-mdi-super-loguser-error-load',   winMdi.functions.formMdiSuperLoguserErrorLoad);
-    }*/
