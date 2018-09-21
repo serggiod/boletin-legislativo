@@ -64,7 +64,6 @@ var applicationElectron = $electron.app;
                             });
                             applicationExpress.use($bodyParser.json({limit:'100mb',extended:true,inflate:true}));
                             applicationExpress.use($bodyParser.urlencoded({limit:'100mb',extended:true,inflate:true}));
-                            applicationExpress.use($express.static($path.join(__dirname + '/library/dhtmlx')));
                             applicationExpress.use($express.static($path.join(__dirname + '/views')));
                             applicationExpress.use('/models/model/auth',     modelAuth);
                             applicationExpress.use('/models/model/usuarios', modelUsuarios);

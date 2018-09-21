@@ -4,9 +4,6 @@
         
         <meta charset="UTF-8">
 
-        <script src="./dhtmlx/dhtmlx.js"></script>
-        <link rel="stylesheet" type="text/css" href="./dhtmlx/dhtmlx.css"/>
-
         <style>
             html, body {
                 width    : 100%;
@@ -20,7 +17,17 @@
     </head>
     <body>
         <script>
-            
+
+            var script     = document.createElement('script');
+                script.src = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.js'
+                document.body.appendChild(script);
+
+            var css = document.createElement('link');
+                css.rel  = 'stylesheet';
+                css.type = 'text/css';
+                css.href = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.css';
+                document.body.appendChild(css);
+                
             var $fs       = require('fs');
             var $path     = require('path');
             var $ajax     = require('../library/ajax');
@@ -131,8 +138,8 @@
                 });
 
             var tree = mdi.cells('a').attachTree();
-                tree.setImagesPath('./dhtmlx/imgs/dhxtree_web/');
-                tree.load($baseHref + 'models/model/tree/init',null,'json');
+                tree.setImagesPath('imgs/dhxtree_material/');
+                tree.load('/models/model/tree/init',null,'json');
                 tree.attachEvent('onSelect',$exe.boletinEditar);
 
             var list = mdi.cells('b').attachList();

@@ -2,9 +2,6 @@
 <html lang="es">
     <head>
         <meta charset="UTF-8">
-    
-        <script src="../dhtmlx.js"></script>
-        <link rel="stylesheet" type="text/css" href="../dhtmlx.css"/>
 
         <style>
             html, body {
@@ -18,7 +15,17 @@
     </head>
     <body>
         <script>
-            
+
+            var script     = document.createElement('script');
+                script.src = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.js'
+                document.body.appendChild(script);
+
+            var css = document.createElement('link');
+                css.rel  = 'stylesheet';
+                css.type = 'text/css';
+                css.href = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.css';
+                document.body.appendChild(css);
+                
             var $fs       = require('fs');
             var $path     = require('path');
             var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
