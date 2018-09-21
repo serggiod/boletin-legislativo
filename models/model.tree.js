@@ -12,6 +12,7 @@ var $sshconn   = require('ssh2-connect');
 var $sshexec   = require('ssh2-exec');
 var $sshclient = require('scp2');
 
+// $router.all('/':ok
 $router.all('/',($rq,$rs)=>{
     $rs.sendStatus(404);
 });
@@ -233,7 +234,7 @@ $router.delete('/periodo/:id',(rq,$rs) => {
                             .to('tree')
                             .write(log,'errors');
                         $rs
-                            .sendStaqtus(404)
+                            .sendStatus(404)
                             .end();
                     }
                 });
@@ -421,7 +422,7 @@ $router.put('/boletin/:file/html',($rq,$rs)=>{
                     .from($rq.rawBody,'base64')
                     .toString('latin1');
 
-            $fs.writeFile(path,html,{encoding:'utf8'},(error)=>{
+            $fs.writeFile(path,html,'utf8',(error)=>{
                 if(error===null) {
                     $log
                         .to('tree')
@@ -1036,11 +1037,12 @@ $router.get('/exportar/word/:file',($rq,$rs)=>{
             });
     } else $rs.status(404).send();
 });*/
+//$router.post('/exportar/pdf/:file:ok
 $router.post('/exportar/pdf/:file',($rq,$rs)=>{
     if($rq.session.status===true){
 
-        let file = rq.params.file;
-            file = file.match(/[0-9\-]/g);
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/gi);
             file = file.join('');
 
         let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
@@ -1052,72 +1054,95 @@ $router.post('/exportar/pdf/:file',($rq,$rs)=>{
         let pathp = file + '.pdf';
             pathp = $path.join(__dirname + '/model.tree.js.files/pdf/',pathp);
         
+            $fs.readFile(path,{encoding:'utf8'},(error,html)=>{
+
+                if(error===null){
+
+                    let config = {
+                            format:'A4',
+                            orientation:'portrait',
+                            border:'15mm'
+                        };
+
+                        html = html
+                            .replace(/size="4"/gm,'size="3"')
+                            .replace(/size="3"/gm,'size="2"')
+                            .replace(/size="2"/gm,'size="1"')
+                            .replace(/width="160px"/gm,'width="110px"')
+                            .replace(/width="70px"/gm,'width="25px"')
+                            .replace(/width="65px"/gm,'width="30px"');
         
-        
-        let html = fs.readFileSync(__dirname + '/model.tree.js.files/html/' + file + '.html',{encoding:'utf8'});
-            html = html.replace(/size="4"/gm,'size="3"')
-                .replace(/size="3"/gm,'size="2"')
-                .replace(/size="2"/gm,'size="1"')
-                .replace(/width="160px"/gm,'width="110px"')
-                .replace(/width="70px"/gm,'width="25px"')
-                .replace(/width="65px"/gm,'width="30px"');
-        
-        let config = {
-                format           : 'A4',
-                orientation      : 'portrait',
-                border           : '0',
-                header           : {
-                    height       : '50mm',
-                    contents     : {
-                        first    : '&nbsp;'
-                    }
-                },
-                footer           : {
-                    height       : '15mm',
-                    contents     : {
-                        first    : '&nbsp;'
-                    }
-                }
-            };
-        
-            htmlPdf
-                .create(html,config)
-                .toFile(path+file+'.pdf',(e) => {
-                    if(e===null){
-                        fs.chmod(path+file+'.pdf','755',(e)=>{
-                            let user = rq.session.user;
-                            let text = user.apellido + ' ' + user.nombre + ' POST: /models/model/tree/pdf/file/' + file + '.';
-                            let pathg = '';
-                                if(e===null) pathg = __dirname + '/model.tree.js.logs/success.log';
-                                else  pathg = __dirname + '/model.tree.js.logs/errors.log';
-                                log.set(pathg,text);
-                                if(e===null) rs.send({result:true,rows:null});
-                                else $rs.send({result:false,rows:null});
-                        });
-                    } else $rs.send({result:false,rows:null});
-                });
-    } else $rs.status(404).send();
+                        $htmlPdf
+                            .create(html,config)
+                            .toFile(pathp,(error)=>{
+
+                                if(error===null) {
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'success');
+                                    $rs.json({result:true,rows:null});
+
+                                }
+
+                                else {
+
+                                    $log
+                                        .to('tree')
+                                        .write(log,'errors');
+                                    $rs.sendStatus(404);
+
+                                }
+
+                            });
+                } else $rs.sendStatus(404);
+
+            });
+
+    } else $rs.sendStatus(404);
 });
-router.get('/exportar/pdf/:file',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let path = __dirname + '/model.tree.js.files/pdf/';
-        let file = rq.params.file.match(/[0-9\-]/g).join('');
-        let pdf = fs.readFileSync(path + file + '.pdf','binary');
-        let user = rq.session.user;
-        let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/exportar/pdf/' + file + '.';
-        let pathf = '';
+//router.get('/exportar/pdf/:file':ok
+$router.get('/exportar/pdf/:file',($rq,$rs)=>{
+    if($rq.session.status===true){
 
-            if(pdf) pathf = __dirname + '/model.tree.js.logs/success.log';
-            else pathf = __dirname + '/model.tree.js.logs/errors.log';
+        let file = $rq.params.file;
+            file = file.match(/[0-9\-]/gi);
+            file = file.join('');
 
-            log.set(pathf,text);
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET  /models/model/tree/exportar/pdf/' + file;
 
-            rs.setHeader('Content-Type','application/pdf');
-            rs.setHeader('Content-Length',pdf.length);
-            rs.setHeader('Content-Disposition','attachment; filename='+file+'.pdf'); 
-            rs.write(pdf, 'binary');
-            rs.end();
-    } else $rs.status(404).send();
+        let path = file + '.pdf';
+            path = $path.join(__dirname,'/model.tree.js.files/pdf/',path);
+        
+            $fs.readFile(path,'binary',(error,data)=>{
+        
+                if(error===null){
+
+                    $log
+                        .to('tree')
+                        .write(log,'success');
+
+                    $rs.setHeader('Content-Type','application/pdf');
+                    $rs.setHeader('Content-Length',data.length);
+                    $rs.setHeader('Content-Disposition','attachment; filename='+file+'.pdf'); 
+                    $rs.write(data, 'binary');
+                    $rs.end();
+
+                }
+
+                else {
+
+                    $log
+                        .to('tree')
+                        .write(log,'errors');
+
+                    $rs.sendStatus(404);
+
+                }
+
+            });
+    } else $rs.sendStatus(404);
 });
 
 /*// Remoto.
@@ -1194,60 +1219,92 @@ router.delete('/remote/boletin/:id/:fname',(rq,rs,n)=>{
                 } else $rs.send({result:false,rows:null});
             });
     } else $rs.status(404).send();
-});
+});*/
 
 
 // Autoridades.
-router.get('/autoridades', (rq,rs,n)=>{
-    if(rq.session.status===true){
-        let path = 'autoridades[0]';
-            db.select({
-                model:'autoridades',
-                path:path,
-                callback:(bol,regs)=>{
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/autoridades.';
-                    let pathg = '';
-                        
-                        if(bol) pathg = __dirname + '/model.tree.js.logs/success.log';
-                        else pathg = __dirname + '/model.tree.js.logs/errors.log';
-                        
-                        log.set(pathg,text);
-                        
-                        rs.send({result:bol,rows:regs});
-                }
-            });
-    } else $rs.status(404).send();
+//$router.get('/autoridades':ok
+$router.get('/autoridades', ($rq,$rs)=>{
+    if($rq.session.status===true){
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET /models/model/tree/autoridades';
+            
+            $db
+                .select('ONE')
+                .from('autoridades')
+                .done((result,rows)=>{
+                    if(result===true){
+
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+
+                        $rs.json({result:true,rows:rows[0]});
+                    }
+
+                    else {
+
+                        $log
+                            .to('tree')
+                            .write(log,'errors');
+
+                        $rs.sendStatus(404);
+
+                    }
+                });
+
+    } else $rs.sendStatus(404);
 });
-router.put('/autoridades',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        rq.body = JSON.parse(rq.body);
+//$router.put('/autoridades':
+$router.put('/autoridades',($rq,$rs)=>{
+    if($rq.session.status===true){
+
+        let log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' PUT /models/model/tree/autoridades';
+
         let autoridades = new Object();
-            autoridades.presidente      = rq.body.presidente.match(new RegExp('[0-9a-z\.\ ' + chars + ']','gi')).join('');
-            autoridades.vicepresidente1 = rq.body.vicepresidente1.match(new RegExp('[0-9a-z\.\ ' + chars + ']','gi')).join('');
-            autoridades.vicepresidente2 = rq.body.vicepresidente2.match(new RegExp('[0-9a-z\.\ ' + chars + ']','gi')).join('');
-            autoridades.parlamentario   = rq.body.parlamentario.match(new RegExp('[0-9a-z\.\ ' + chars + ']','gi')).join('');
-            autoridades.administrativo  = rq.body.administrativo.match(new RegExp('[0-9a-z\.\ ' + chars + ']','gi')).join('');
-        let path  = 'autoridades[0]';
-            db.update({
-                model:'autoridades',
-                path:path,
-                value:autoridades,
-                callback:(bol,regs) => {
-                    let user = rq.session.user;
-                    let text = user.apellido + ' ' + user.nombre + ' PUT: /models/model/tree/autoridades.';
-                    let pathg = '';
-                        
-                        if(bol) pathg = __dirname + '/model.tree.js.logs/success.log';
-                        else pathg = __dirname + '/model.tree.js.logs/errors.log';
-                        
-                        log.set(pathg,text);
-                        
-                        rs.send({result:bol,rows:regs});
+            autoridades.presidente      = $rq.body.presidente.match(new RegExp('[0-9a-záéíóúÁÉÍÓÚñÑ\.\ ]','gi')).join('');
+            autoridades.vicepresidente1 = $rq.body.vicepresidente1.match(new RegExp('[0-9a-záéíóúÁÉÍÓÚñÑ\.\ ]','gi')).join('');
+            autoridades.vicepresidente2 = $rq.body.vicepresidente2.match(new RegExp('[0-9a-záéíóúÁÉÍÓÚñÑ\.\ ]','gi')).join('');
+            autoridades.parlamentario   = $rq.body.parlamentario.match(new RegExp('[0-9a-záéíóúÁÉÍÓÚñÑ\.\ ]','gi')).join('');
+            autoridades.administrativo  = $rq.body.administrativo.match(new RegExp('[0-9a-záéíóúÁÉÍÓÚñÑ\.\ ]','gi')).join('');
+
+        let path = $path.join(__dirname,'/../database/autoridades.db');
+
+            $fs.readFile(path,'utf8',(error,data)=>{
+                if(error===null){
+                    
+                    let table = JSON.parse(data);
+                        table[0] = autoridades;
+                        table = JSON.stringify(table);
+
+                        $fs.writeFile(path,table,'utf8',(error)=>{
+                            
+                            if(error===null) {
+
+                                $log
+                                    .to('tree')
+                                    .write(log,'success');
+
+                                $rs.json({result:true,rows:null});
+
+                            }
+
+                            else {
+
+                                $log
+                                    .to('tree')
+                                    .write(log,'errors');
+                                $rs.sendStatus(404);
+                            }
+
+                        });
+
                 }
-            });
-    } else $rs.status(404).send();
-});*/
+            })
+    } else $rs.sendStatus(404);
+});
 
 // Super respaldo.
 // $router.get('/super/respaldo/load':ok

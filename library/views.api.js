@@ -1,5 +1,10 @@
 var $fs      = require('fs');
 var $path    = require('path');
+var $mode     = $path.join(__dirname,'/../conf/mode.json');
+    $mode     = $fs.readFileSync($mode,{encoding:'utf8'});
+    $mode     = JSON.parse($mode);
+var $config   = $mode.config.server;
+var $host     = $config.proto + '://' + $config.ip + ':' + $config.port + '/';
 var viewsApi = {
     //formPassword:ok
     formPassword    : () => {
@@ -20,7 +25,7 @@ var viewsApi = {
             maximizable : false,
             webPreferences : {devTools:false}
         });
-        formPassword.loadURL('/view.mdi.files/form.password.html');
+        formPassword.loadURL($host + '/view.mdi.files/form.password.html');
         formPassword.setMenu(null);
         formPassword.center();
         formPassword.openDevTools();
@@ -44,7 +49,7 @@ var viewsApi = {
             maximizable : false,
             webPreferences : {devTools:false}
         });
-        formLogout.loadURL('/view.mdi.files/form.logout.html');
+        formLogout.loadURL($host + '/view.mdi.files/form.logout.html');
         formLogout.setMenu(null);
         formLogout.center();
         formLogout.openDevTools();
@@ -68,7 +73,7 @@ var viewsApi = {
             maximizable : false,
             webPreferences : {devTools:false}
         });
-        formClose.loadURL('/view.mdi.files/form.close.html');
+        formClose.loadURL($host + '/view.mdi.files/form.close.html');
         formClose.setMenu(null);
         formClose.center();
         formClose.openDevTools();
@@ -92,11 +97,12 @@ var viewsApi = {
             maximizable : false,
             webPreferences : {devTools:false}
         });
-        formUsuarios.loadURL('/view.mdi.files/form.usuarios.html');
+        formUsuarios.loadURL($host + '/view.mdi.files/form.usuarios.html');
         formUsuarios.setMenu(null);
         formUsuarios.center();
         formUsuarios.openDevTools();    
     },
+    //formBoletinesOnline:
     formBoletinesOnline : () => {
         let icon = $path.join(__dirname,'/../assets/');
             if(process.platform==='win32')  icon += 'icon.ico';
@@ -115,11 +121,12 @@ var viewsApi = {
             maximizable : false,
             webPreferences : {devTools:true}
         });
-        formBoletines.loadURL('/view.mdi.files/form.boletines.html');
+        formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html');
         formBoletines.setMenu(null);
         formBoletines.center();
         formBoletines.openDevTools();
     },
+    //formAutoridades:ok
     formAutoridades : () => {
         let icon = $path.join(__dirname,'/../assets/');
             if(process.platform==='win32')  icon += 'icon.ico';
@@ -129,16 +136,16 @@ var viewsApi = {
             icon        : icon,
             title       : 'Administrar Autoridades',
             parent      : $electron.remote.getCurrentWindow(),
-            width       : 420,
-            height      : 200,
+            width       : 560,
+            height      : 260,
             modal       : true,
             frame       : true,
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:true}
+            webPreferences : {devTools:false}
         });
-        formAutoridades.loadURL('/view.mdi.files/form.autoridades.html');
+        formAutoridades.loadURL($host + '/view.mdi.files/form.autoridades.html');
         formAutoridades.setMenu(null);
         formAutoridades.center();
         formAutoridades.openDevTools();
@@ -524,7 +531,10 @@ var viewsApi = {
                     .header(header)
                     .body(html)
                     .put(url,(json)=>{
-                        if(json.result===true)  dhtmlx.message({text:'El Boletín Legislativo se guardó en forma correcta.'});
+                        if(json.result===true){
+                            mdi.cells('c').attachURL(url,false);
+                            dhtmlx.message({text:'El Boletín Legislativo se guardó en forma correcta.'});
+                        }
                         if(json.result===false) dhtmlx.message({text:'No se pudo guardar los cambios en el Boletín Legislativo',type:'error'});
                     });
 
@@ -1067,30 +1077,7 @@ var viewsApi = {
                     });
         }
     },
-    exportarAWEB : () => {
-        let id = tree.getSelectedItemId();
-        let name = tree.getSelectedItemText().replace('/','-');
-        let parent = tree.getParentId(id);
-        let indexp = tree.getIndexById(parent);
-        let indexb = tree.getIndexById(id);
-        if(parent!=0){
-            mdi.progressOn();
-            let url = 'models/model/tree/exportar/pdf/' + name;
-                dhx.ajax().post(url,null,(json)=>{
-                    json = JSON.parse(json);
-                    if(json.result===true){
-                        let xhr = dhx.ajax().post('models/model/tree/exportar/web/' + indexp + '.' + indexb + '.' + name);
-                            xhr.onload = xhr => {
-                                mdi.progressOff();
-                                json = JSON.parse(xhr.target.responseText);
-                                if(json.result===true) dhtmlx.message({text:'El Boletín Legislativo se publico en forma correcta.',type:'success'});
-                                else dhtmlx.message({text:'No se pudo publicar el Boletín Legislativo.',type:'error'});
-                                $exe.formBoletinesOnline();
-                            };
-                        }
-                });
-        }
-    },
+    //exportarAPDF:ok
     exportarAPDF : () => {
         let id = tree.getSelectedItemId();
         let name = tree.getSelectedItemText().replace('/','-');
@@ -1117,7 +1104,30 @@ var viewsApi = {
                         mdi.progressOff();
                     });
         }
+    },
+    exportarAWEB : () => {
+        let id = tree.getSelectedItemId();
+        let name = tree.getSelectedItemText().replace('/','-');
+        let parent = tree.getParentId(id);
+        let indexp = tree.getIndexById(parent);
+        let indexb = tree.getIndexById(id);
+        if(parent!=0){
+            mdi.progressOn();
+            let url = 'models/model/tree/exportar/pdf/' + name;
+                dhx.ajax().post(url,null,(json)=>{
+                    json = JSON.parse(json);
+                    if(json.result===true){
+                        let xhr = dhx.ajax().post('models/model/tree/exportar/web/' + indexp + '.' + indexb + '.' + name);
+                            xhr.onload = xhr => {
+                                mdi.progressOff();
+                                json = JSON.parse(xhr.target.responseText);
+                                if(json.result===true) dhtmlx.message({text:'El Boletín Legislativo se publico en forma correcta.',type:'success'});
+                                else dhtmlx.message({text:'No se pudo publicar el Boletín Legislativo.',type:'error'});
+                                $exe.formBoletinesOnline();
+                            };
+                        }
+                });
+        }
     }
-    
 };
 module.exports = viewsApi;

@@ -47,7 +47,7 @@ var logApi = new Object();
             date += sec;
             date += '] ';
 
-            logContent = logContent.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\ \.\,\;\/]/gi);
+            logContent = logContent.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\ \.\,\;\-\/]/gi);
             logContent = logContent.join('');
             logContent = date + logContent;
 
@@ -57,7 +57,7 @@ var logApi = new Object();
                         logArray = JSON.parse(data);
                         logArray.unshift(logContent);
 
-                        if(logArray.length>=3001) logArray.pop();
+                        if(logArray.length>=2001) logArray.pop();
 
                         logArray = JSON.stringify(logArray);
 
