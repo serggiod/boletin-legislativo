@@ -6,6 +6,7 @@ var $mode     = $path.join(__dirname,'/../conf/mode.json');
 var $config   = $mode.config.server;
 var $host     = $config.proto + '://' + $config.ip + ':' + $config.port + '/';
 var viewsApi = {
+    
     //formPassword:ok
     formPassword    : () => {
         let icon = $path.join(__dirname,'/../assets/');
@@ -17,13 +18,18 @@ var viewsApi = {
             title       : 'Modificar el password',
             parent      : $electron.remote.getCurrentWindow(),
             width       : 400,
-            height      : 180,
+            height      : 220,
             modal       : true,
             frame       : true,
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:false}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formPassword.loadURL($host + '/view.mdi.files/form.password.html');
         formPassword.setMenu(null);
@@ -41,13 +47,18 @@ var viewsApi = {
             title       : 'Cerrar sesión',
             parent      : $electron.remote.getCurrentWindow(),
             width       : 400,
-            height      : 180,
+            height      : 160,
             modal       : true,
             frame       : true,
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:false}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formLogout.loadURL($host + '/view.mdi.files/form.logout.html');
         formLogout.setMenu(null);
@@ -65,13 +76,18 @@ var viewsApi = {
             title       : 'Salir de la aplicación',
             parent      : $electron.remote.getCurrentWindow(),
             width       : 400,
-            height      : 180,
+            height      : 160,
             modal       : true,
             frame       : true,
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:false}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formClose.loadURL($host + '/view.mdi.files/form.close.html');
         formClose.setMenu(null);
@@ -95,7 +111,12 @@ var viewsApi = {
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:false}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formUsuarios.loadURL($host + '/view.mdi.files/form.usuarios.html');
         formUsuarios.setMenu(null);
@@ -119,7 +140,12 @@ var viewsApi = {
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:true}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html');
         formBoletines.setMenu(null);
@@ -143,7 +169,12 @@ var viewsApi = {
             resizable   : false,
             minimizable : false,
             maximizable : false,
-            webPreferences : {devTools:false}
+            webPreferences : {
+                webSecurity:false,
+                allowRunningInsecureContent : true,
+                allowDisplayingInsecureContent:true,
+                devTools:false
+            }
         });
         formAutoridades.loadURL($host + '/view.mdi.files/form.autoridades.html');
         formAutoridades.setMenu(null);
@@ -492,18 +523,19 @@ var viewsApi = {
                 });
         }
     },
-    //boletinEditar:
+    //boletinEditar:ok
     boletinEditar   : () => {
         let id = tree.getSelectedItemId();
         let text = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
-        if(parent!=0){
+        if(parent===0) tree.openItem(id);
+        else {
             let urlb = '/models/model/tree/boletin/' + text + '/html';
             let urlt = '/models/model/tree/tareas/' + parent + '/' +id;
                 mdi.cells('c').attachURL(urlb,false);
                 list.clearAll();
                 list.load(urlt,'json',()=>{
-                    //mdi.cells('b').cell.childNodes.item(1).childNodes.item(0).style.overflowY='scroll';
+                    mdi.cells('b').cell.childNodes.item(1).childNodes.item(0).style.overflowY='scroll';
                 });
         }
     },

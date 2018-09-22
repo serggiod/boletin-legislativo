@@ -37,240 +37,255 @@
             var $window   = $electron.remote.BrowserWindow;
             var $dialog   = $electron.remote.dialog;
 
-                window.addEventListener('load',()=>{
+            var layout  = null;
+            var menu    = null;
+            var sidebar = null;
+            var layoutLogAuth = null;
+            var layoutLogTree = null;
+            var layoutLogUser = null;
+            var gridres       = null;
+            var griddes       = null;
+            var gridLogAuthSuccess = null;
+            var gridLogAuthError   = null;
+            var gridLogtreeSuccess = null;
+            var gridLogtreeError   = null;
+            var gridLogUserSuccess = null;
+            var gridLogUserError   = null;
+
+                window.onload = ()=>{
             
-                    let layout = new dhtmlXLayoutObject(document.body,'1C');
-                        layout.cells('a').setText('');
-                        layout.cells('a').hideHeader();
+                    layout = new dhtmlXLayoutObject(document.body,'1C');
+                    layout.cells('a').setText('');
+                    layout.cells('a').hideHeader();
 
-                    let menu = layout.attachMenu();
-                        menu.loadStruct([
-                            {id:'Archivo',text:'Archivo',img:'/icons/application.png',imgdis:'/icons/application.png',items:[
-                                {id:'formPassword',text:'Cambiar Password',img:'/icons/application_key.png',imgdis:'/icons/application_key.png'},
-                                {id:'formLogout',text:'Cerrar la Sesión',img:'/icons/time_delete.png',imgdis:'/icons/time_delete.png'},
-                                {id:'formClose',text:'Salir de la Aplicación',img:'/icons/application_delete.png',imgdis:'/icons/application_delete.png'}
-                            ]},
-                            {id:'Herramientas',text:'Herramientas',img:'/icons/application_view_tile.png',imgdis:'/icons/application_view_tile.png',items:[
-                                {id:'formUsuarios',text:'Administrar Usuarios',img:'/icons/user.png',imgdis:'/icons/user.png'}
-                            ]}
-                        ]);
-                        menu.attachEvent('onClick',(id) => {
-                            if(id==='formPassword') $exe.formPassword();
-                            if(id==='formLogout')   $exe.formLogout();
-                            if(id==='formClose')    $exe.formClose();
-                            if(id==='formUsuarios') $exe.formUsuarios();
-                        });
+                    menu = layout.attachMenu();
+                    menu.loadStruct([
+                        {id:'Archivo',text:'Archivo',img:'/icons/application.png',imgdis:'/icons/application.png',items:[
+                            {id:'formPassword',text:'Cambiar Password',img:'/icons/application_key.png',imgdis:'/icons/application_key.png'},
+                            {id:'formLogout',text:'Cerrar la Sesión',img:'/icons/time_delete.png',imgdis:'/icons/time_delete.png'},
+                            {id:'formClose',text:'Salir de la Aplicación',img:'/icons/application_delete.png',imgdis:'/icons/application_delete.png'}
+                        ]},
+                        {id:'Herramientas',text:'Herramientas',img:'/icons/application_view_tile.png',imgdis:'/icons/application_view_tile.png',items:[
+                            {id:'formUsuarios',text:'Administrar Usuarios',img:'/icons/user.png',imgdis:'/icons/user.png'}
+                        ]}
+                    ]);
+                    menu.attachEvent('onClick',(id) => {
+                        if(id==='formPassword') $exe.formPassword();
+                        if(id==='formLogout')   $exe.formLogout();
+                        if(id==='formClose')    $exe.formClose();
+                        if(id==='formUsuarios') $exe.formUsuarios();
+                    });
 
-                    let sidebar = layout.cells('a').attachSidebar();
-                        sidebar.loadStruct({
-                            width:200,
-                            header:true,
-                            autohide:true,
-                            template:'tiles',
-                            items:[
-                                {id:'respaldo',text:'Respaldo',selected:true,icon:'/icons/database_gear.png'},
-                                {type:'separator'},
-                                {id:'descargas',text:'Descargas',icon:'/icons/database_save.png'},
-                                {type:'separator'},
-                                {id:'logauth',text:'Log de Autenticación',icon:'/icons/cog.png'},
-                                {type:'separator'},
-                                {id:'logtree',text:'Log de Actividades',icon:'/icons/cog.png'},
-                                {type:'separator'},
-                                {id:'loguser',text:'Log de Usuarios',icon:'/icons/cog.png'}
-                            ]
-                        });
-                        sidebar.attachEvent('onSelect',(id)=>{
-                            if(id==='respaldo')  {
-                                let callback = () => sidebar.cells('respaldo').progressOff();
-                                    sidebar.cells('respaldo').progressOn();
-                                    gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');
-                            }
-                            if(id==='descargas') {
-                                let progressoff = () => sidebar.cells('descargas').progressOff();
-                                    sidebar.cells('descargas').progressOn();
-                                    griddes.clearAndLoad('/models/model/tree/super/descargas/load',progressoff,'json');
-                            }
-                            if(id==='logauth')   {
-                                let progressoff = () => sidebar.cells('logauth').progressOff();
-                                let urlsuccess = '/models/model/tree/super/logauth/success/load';
-                                let urlerrors = '/models/model/tree/super/logauth/errors/load';
-                                    sidebar.cells('logauth').progressOn();
-                                    gridLogAuthSuccess.clearAndLoad(urlsuccess,progressoff,'json');
-                                    gridLogAuthError.clearAndLoad(urlerrors,progressoff,'json');
-                            }
-                            if(id==='logtree')   {
-                                let progressoff = () => sidebar.cells('logtree').progressOff();
-                                let urlsuccess = '/models/model/tree/super/logtree/success/load';
-                                let urlerrors = '/models/model/tree/super/logtree/errors/load';
-                                    sidebar.cells('logtree').progressOn();
-                                    gridLogtreeSuccess.clearAndLoad(urlsuccess,progressoff,'json');
-                                    gridLogtreeError.clearAndLoad(urlerrors,progressoff,'json');
-                            }
-                            if(id==='loguser')   {
-                                let progressoff = () => sidebar.cells('loguser').progressOff();
-                                let urlsuccess = '/models/model/tree/super/loguser/success/load';
-                                let urlerrors = '/models/model/tree/super/loguser/errors/load';
-                                    sidebar.cells('loguser').progressOn();
-                                    gridLogUserSuccess.clearAndLoad(urlsuccess,progressoff,'json');
-                                    gridLogUserError.clearAndLoad(urlerrors,progressoff,'json');
-                            }
-                        });
+                    sidebar = layout.cells('a').attachSidebar();
+                    sidebar.loadStruct({
+                        width:200,
+                        header:true,
+                        autohide:true,
+                        template:'tiles',
+                        items:[
+                            {id:'respaldo',text:'Respaldo',selected:true,icon:'/icons/database_gear.png'},
+                            {type:'separator'},
+                            {id:'descargas',text:'Descargas',icon:'/icons/database_save.png'},
+                            {type:'separator'},
+                            {id:'logauth',text:'Log de Autenticación',icon:'/icons/cog.png'},
+                            {type:'separator'},
+                            {id:'logtree',text:'Log de Actividades',icon:'/icons/cog.png'},
+                            {type:'separator'},
+                            {id:'loguser',text:'Log de Usuarios',icon:'/icons/cog.png'}
+                        ]
+                    });
+                    sidebar.attachEvent('onSelect',(id)=>{
+                        if(id==='respaldo')  {
+                            let callback = () => sidebar.cells('respaldo').progressOff();
+                                sidebar.cells('respaldo').progressOn();
+                                gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');
+                        }
+                        if(id==='descargas') {
+                            let progressoff = () => sidebar.cells('descargas').progressOff();
+                                sidebar.cells('descargas').progressOn();
+                                griddes.clearAndLoad('/models/model/tree/super/descargas/load',progressoff,'json');
+                        }
+                        if(id==='logauth')   {
+                            let progressoff = () => sidebar.cells('logauth').progressOff();
+                            let urlsuccess = '/models/model/tree/super/logauth/success/load';
+                            let urlerrors = '/models/model/tree/super/logauth/errors/load';
+                                sidebar.cells('logauth').progressOn();
+                                gridLogAuthSuccess.clearAndLoad(urlsuccess,progressoff,'json');
+                                gridLogAuthError.clearAndLoad(urlerrors,progressoff,'json');
+                        }
+                        if(id==='logtree')   {
+                            let progressoff = () => sidebar.cells('logtree').progressOff();
+                            let urlsuccess = '/models/model/tree/super/logtree/success/load';
+                            let urlerrors = '/models/model/tree/super/logtree/errors/load';
+                                sidebar.cells('logtree').progressOn();
+                                gridLogtreeSuccess.clearAndLoad(urlsuccess,progressoff,'json');
+                                gridLogtreeError.clearAndLoad(urlerrors,progressoff,'json');
+                        }
+                        if(id==='loguser')   {
+                            let progressoff = () => sidebar.cells('loguser').progressOff();
+                            let urlsuccess = '/models/model/tree/super/loguser/success/load';
+                            let urlerrors = '/models/model/tree/super/loguser/errors/load';
+                                sidebar.cells('loguser').progressOn();
+                                gridLogUserSuccess.clearAndLoad(urlsuccess,progressoff,'json');
+                                gridLogUserError.clearAndLoad(urlerrors,progressoff,'json');
+                        }
+                    });
 
-                    let layoutLogAuth = sidebar.cells('logauth').attachLayout('2E');
-                        layoutLogAuth.cells('a').setText('');
-                        layoutLogAuth.cells('a').hideHeader();
-                        layoutLogAuth.cells('b').setText('');
-                        layoutLogAuth.cells('b').hideHeader();
+                    layoutLogAuth = sidebar.cells('logauth').attachLayout('2E');
+                    layoutLogAuth.cells('a').setText('');
+                    layoutLogAuth.cells('a').hideHeader();
+                    layoutLogAuth.cells('b').setText('');
+                    layoutLogAuth.cells('b').hideHeader();
 
-                    let layoutLogTree = sidebar.cells('logtree').attachLayout('2E');
-                        layoutLogTree.cells('a').setText('');
-                        layoutLogTree.cells('a').hideHeader();
-                        layoutLogTree.cells('b').setText('');
-                        layoutLogTree.cells('b').hideHeader();
+                    layoutLogTree = sidebar.cells('logtree').attachLayout('2E');
+                    layoutLogTree.cells('a').setText('');
+                    layoutLogTree.cells('a').hideHeader();
+                    layoutLogTree.cells('b').setText('');
+                    layoutLogTree.cells('b').hideHeader();
 
-                    let layoutLogUser = sidebar.cells('loguser').attachLayout('2E');
-                        layoutLogUser.cells('a').setText('');
-                        layoutLogUser.cells('a').hideHeader();
-                        layoutLogUser.cells('b').setText('');
-                        layoutLogUser.cells('b').hideHeader();
+                    layoutLogUser = sidebar.cells('loguser').attachLayout('2E');
+                    layoutLogUser.cells('a').setText('');
+                    layoutLogUser.cells('a').hideHeader();
+                    layoutLogUser.cells('b').setText('');
+                    layoutLogUser.cells('b').hideHeader();
 
                     //--------------RESPALDOS-------------//
-                    let gridres = sidebar.cells('respaldo').attachGrid();
-                        gridres.setHeader('Copias de respaldo,,');
-                        gridres.setInitWidths('200,60,60');
-                        gridres.setColAlign('center,center,center');
-                        gridres.setColTypes('ro,ro,ro');
-                        gridres.setColSorting('str,str,str');
-                        gridres.init();
-                        gridres.load('/models/model/tree/super/respaldo/load','json');
-                        window.respaldosRestore = (dname)=>{
-                            if(confirm('¿Esta seguro que desea restaurar esta copia?')){
-                                let url = '/models/model/tree/super/respaldo/restore/' + dname;
-                                let header = {'Content-Type':'application/json'};
-                                let callback = () => sidebar.cells('respaldo').progressOff();
-                                let success = (json) => {if(json.result===true) gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');};
-                                    sidebar.cells('respaldo').progressOn()
-                                    $ajax
-                                        .header(header)
-                                        .put(url,success);
-                            }
-                        };
-                        window.respaldosDelete  = (dname)=>{
-                            if(confirm('¿Esta seguro que desea eliminar esta copia?')){
-                                let url = '/models/model/tree/super/respaldo/delete/' + dname;
-                                let header = {'Content-Type':'application/json'};
-                                let callback = () => sidebar.cells('respaldo').progressOff();
-                                let success = (json) => {if(json.result===true) gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');};
-                                    sidebar.cells('respaldo').progressOn()
-                                    $ajax
-                                        .header(header)
-                                        .delete(url,success);
-                            }
-                        };
+                    gridres = sidebar.cells('respaldo').attachGrid();
+                    gridres.setHeader('Copias de respaldo,,');
+                    gridres.setInitWidths('200,60,60');
+                    gridres.setColAlign('center,center,center');
+                    gridres.setColTypes('ro,ro,ro');
+                    gridres.setColSorting('str,str,str');
+                    gridres.init();
+                    gridres.load('/models/model/tree/super/respaldo/load','json');
+                    window.respaldosRestore = (dname)=>{
+                        if(confirm('¿Esta seguro que desea restaurar esta copia?')){
+                            let url = '/models/model/tree/super/respaldo/restore/' + dname;
+                            let header = {'Content-Type':'application/json'};
+                            let callback = () => sidebar.cells('respaldo').progressOff();
+                            let success = (json) => {if(json.result===true) gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');};
+                                sidebar.cells('respaldo').progressOn()
+                                $ajax
+                                    .header(header)
+                                    .put(url,success);
+                        }
+                    };
+                    window.respaldosDelete  = (dname)=>{
+                        if(confirm('¿Esta seguro que desea eliminar esta copia?')){
+                            let url = '/models/model/tree/super/respaldo/delete/' + dname;
+                            let header = {'Content-Type':'application/json'};
+                            let callback = () => sidebar.cells('respaldo').progressOff();
+                            let success = (json) => {if(json.result===true) gridres.clearAndLoad('/models/model/tree/super/respaldo/load',callback,'json');};
+                                sidebar.cells('respaldo').progressOn()
+                                $ajax
+                                    .header(header)
+                                    .delete(url,success);
+                        }
+                    };
                     //--------------RESPALDOS-------------//
 
                     //--------------DESCARGAS-------------//
-                    let griddes = sidebar.cells('descargas').attachGrid();
-                        griddes.setHeader('Respaldos para descargar,,');
-                        griddes.setInitWidths('200,60,60');
-                        griddes.setColAlign('center,center,center');
-                        griddes.setColTypes('ro,ro,ro');
-                        griddes.setColSorting('str,str,str');
-                        griddes.init();
-                        window.descargasDownload = (dname)=>{
+                    griddes = sidebar.cells('descargas').attachGrid();
+                    griddes.setHeader('Respaldos para descargar,,');
+                    griddes.setInitWidths('200,60,60');
+                    griddes.setColAlign('center,center,center');
+                    griddes.setColTypes('ro,ro,ro');
+                    griddes.setColSorting('str,str,str');
+                    griddes.init();
+                    window.descargasDownload = (dname)=>{
 
-                            let a = document.createElement('A');
-                                a.type = 'application/zip';
-                                a.download = dname;
-                                a.href = '/models/model/tree/super/descargas/download/' + dname; 
-                                a.click();
+                        let a = document.createElement('A');
+                            a.type = 'application/zip';
+                            a.download = dname;
+                            a.href = '/models/model/tree/super/descargas/download/' + dname; 
+                            a.click();
 
-                        };
-                        window.descargasDelete   = (dname)=>{
+                    };
+                    window.descargasDelete   = (dname)=>{
 
-                            if(confirm('¿Esta seguro que desea  eliminar esta descarga?')){
+                        if(confirm('¿Esta seguro que desea  eliminar esta descarga?')){
 
-                                let url = '/models/model/tree/super/descargas/delete/' + dname;
-                                let header={'Content-Type':'application/json'};
-                                let callback = (json) => {
-                                        if(json.result===true){
-                                            let progressoff = () => sidebar.cells('descargas').progressOff();
-                                                griddes.clearAndLoad('/models/model/tree/super/descargas/load',progressoff,'json');
-                                        }
-                                    };
-                                    sidebar.cells('descargas').progressOn();
+                            let url = '/models/model/tree/super/descargas/delete/' + dname;
+                            let header={'Content-Type':'application/json'};
+                            let callback = (json) => {
+                                    if(json.result===true){
+                                        let progressoff = () => sidebar.cells('descargas').progressOff();
+                                            griddes.clearAndLoad('/models/model/tree/super/descargas/load',progressoff,'json');
+                                    }
+                                };
+                                sidebar.cells('descargas').progressOn();
 
-                                    $ajax
-                                        .header(header)
-                                        .delete(url,callback);
+                                $ajax
+                                    .header(header)
+                                    .delete(url,callback);
 
-                            }
+                        }
 
-                        };
+                    };
                     //--------------DESCARGAS-------------//
 
                     //--------------LOGAUTHSUCCESS-------------//
-                    let gridLogAuthSuccess = layoutLogAuth.cells('a').attachGrid();
-                        gridLogAuthSuccess.setHeader('success.log');
-                        gridLogAuthSuccess.setInitWidths('*');
-                        gridLogAuthSuccess.setColAlign('left');
-                        gridLogAuthSuccess.setColTypes('ro');
-                        gridLogAuthSuccess.setColSorting('str');
-                        gridLogAuthSuccess.init();
+                    gridLogAuthSuccess = layoutLogAuth.cells('a').attachGrid();
+                    gridLogAuthSuccess.setHeader('success.log');
+                    gridLogAuthSuccess.setInitWidths('*');
+                    gridLogAuthSuccess.setColAlign('left');
+                    gridLogAuthSuccess.setColTypes('ro');
+                    gridLogAuthSuccess.setColSorting('str');
+                    gridLogAuthSuccess.init();
                     //--------------LOGAUTHSUCCESS-------------//
 
                     //--------------LOGAUTHERROR-------------//
-                    let gridLogAuthError = layoutLogAuth.cells('b').attachGrid();
-                        gridLogAuthError.setHeader('errors.log');
-                        gridLogAuthError.setInitWidths('*');
-                        gridLogAuthError.setColAlign('left');
-                        gridLogAuthError.setColTypes('ro');
-                        gridLogAuthError.setColSorting('str');
-                        gridLogAuthError.init();
+                    gridLogAuthError = layoutLogAuth.cells('b').attachGrid();
+                    gridLogAuthError.setHeader('errors.log');
+                    gridLogAuthError.setInitWidths('*');
+                    gridLogAuthError.setColAlign('left');
+                    gridLogAuthError.setColTypes('ro');
+                    gridLogAuthError.setColSorting('str');
+                    gridLogAuthError.init();
                     //--------------LOGAUTHERROR-------------//
 
                     //--------------LOGTREESUCCESS-------------//
-                    let gridLogtreeSuccess = layoutLogTree.cells('a').attachGrid();
-                        gridLogtreeSuccess.setHeader('success.log');
-                        gridLogtreeSuccess.setInitWidths('*');
-                        gridLogtreeSuccess.setColAlign('left');
-                        gridLogtreeSuccess.setColTypes('ro');
-                        gridLogtreeSuccess.setColSorting('str');
-                        gridLogtreeSuccess.init();
+                    gridLogtreeSuccess = layoutLogTree.cells('a').attachGrid();
+                    gridLogtreeSuccess.setHeader('success.log');
+                    gridLogtreeSuccess.setInitWidths('*');
+                    gridLogtreeSuccess.setColAlign('left');
+                    gridLogtreeSuccess.setColTypes('ro');
+                    gridLogtreeSuccess.setColSorting('str');
+                    gridLogtreeSuccess.init();
                     //--------------LOGTREESUCCESS-------------//
 
                     //--------------LOGTREEERROR-------------//
-                    let gridLogtreeError = layoutLogTree.cells('b').attachGrid();
-                        gridLogtreeError.setHeader('errors.log');
-                        gridLogtreeError.setInitWidths('*');
-                        gridLogtreeError.setColAlign('left');
-                        gridLogtreeError.setColTypes('ro');
-                        gridLogtreeError.setColSorting('str');
-                        gridLogtreeError.init();
+                    gridLogtreeError = layoutLogTree.cells('b').attachGrid();
+                    gridLogtreeError.setHeader('errors.log');
+                    gridLogtreeError.setInitWidths('*');
+                    gridLogtreeError.setColAlign('left');
+                    gridLogtreeError.setColTypes('ro');
+                    gridLogtreeError.setColSorting('str');
+                    gridLogtreeError.init();
                     //--------------LOGTREEERROR-------------//
                     
                     //--------------LOGUSERSUCCESS-------------//
-                    let gridLogUserSuccess = layoutLogUser.cells('a').attachGrid();
-                        gridLogUserSuccess.setHeader('success.log');
-                        gridLogUserSuccess.setInitWidths('*');
-                        gridLogUserSuccess.setColAlign('left');
-                        gridLogUserSuccess.setColTypes('ro');
-                        gridLogUserSuccess.setColSorting('str');
-                        gridLogUserSuccess.init();
+                    gridLogUserSuccess = layoutLogUser.cells('a').attachGrid();
+                    gridLogUserSuccess.setHeader('success.log');
+                    gridLogUserSuccess.setInitWidths('*');
+                    gridLogUserSuccess.setColAlign('left');
+                    gridLogUserSuccess.setColTypes('ro');
+                    gridLogUserSuccess.setColSorting('str');
+                    gridLogUserSuccess.init();
                     //--------------LOGUSERSUCCESS-------------//
 
                     //--------------LOGUSERERROR-------------//
-                    let gridLogUserError = layoutLogUser.cells('b').attachGrid();
-                        gridLogUserError.setHeader('errors.log');
-                        gridLogUserError.setInitWidths('*');
-                        gridLogUserError.setColAlign('left');
-                        gridLogUserError.setColTypes('ro');
-                        gridLogUserError.setColSorting('str');
-                        gridLogUserError.init();
+                    gridLogUserError = layoutLogUser.cells('b').attachGrid();
+                    gridLogUserError.setHeader('errors.log');
+                    gridLogUserError.setInitWidths('*');
+                    gridLogUserError.setColAlign('left');
+                    gridLogUserError.setColTypes('ro');
+                    gridLogUserError.setColSorting('str');
+                    gridLogUserError.init();
                     //--------------LOGUSERERROR-------------//
 
-                });
+                };
                 
-    </script>
-</body>
+        </script>
+    </body>
 </html>

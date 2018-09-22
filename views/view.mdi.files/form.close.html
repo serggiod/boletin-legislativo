@@ -34,27 +34,31 @@
             var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
             var $event    = $electron.ipcRenderer;
 
+            var toolbar   = null;
+            var cancelar  = null;
+            var aceptar   = null;
+            var layout    = null;
 
-            window.addEventListener('load',()=>{
+                window.onload = ()=>{
 
-                let layout = new dhtmlXLayoutObject(document.body,'1C');
+                    layout = new dhtmlXLayoutObject(document.body,'1C');
                     layout.cells('a').setText('');
                     layout.cells('a').hideHeader();
                     layout.cells('a').attachHTMLString('<h3 style="text-align:center;">¿Esta seguro que desea salir de esta aplicación?</h3>');
                 
-                let aceptar = () => {
-                    let url = '/models/model/auth/logout';
-                        $ajax
-                            .delete(url,(json)=>{
-                                if(json.result===true) $event.send('form-logout-application-exit');
-                            });
-                };
+                    aceptar = () => {
+                        let url = '/models/model/auth/logout';
+                            $ajax
+                                .delete(url,(json)=>{
+                                    if(json.result===true) $event.send('form-logout-application-exit');
+                                });
+                    };
 
-                let cancelar = () => {
-                    $electron.remote.getCurrentWindow().close();
-                };
+                    cancelar = () => {
+                        $electron.remote.getCurrentWindow().close();
+                    };
 
-                let toolbar = layout.cells('a').attachToolbar();
+                    toolbar = layout.cells('a').attachToolbar();
                     toolbar.loadStruct([
                         {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},    
                         {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
@@ -66,7 +70,7 @@
                         }
                     });
 
-            });
+                };
 
         </script>
     </body>

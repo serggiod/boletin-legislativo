@@ -19,7 +19,7 @@
         <script>
 
             var script     = document.createElement('script');
-                script.src = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.js'
+                script.src = 'file://' + process.env.INIT_CWD + '/library/dhtmlx/dhtmlx.js';
                 document.body.appendChild(script);
 
             var css = document.createElement('link');
@@ -37,186 +37,198 @@
             var $window   = $electron.remote.BrowserWindow;
             var $dialog   = $electron.remote.dialog;
 
-                    let mdi = new dhtmlXLayoutObject(document.body,'4A');
-                        mdi.cells('a').setText('Biblioteca');
-                        mdi.cells('a').fixSize(true,true);
-                        mdi.cells('a').setWidth(280);
-                        mdi.cells('a').setHeight(200);
-                        mdi.cells('b').setText('Tareas');
-                        mdi.cells('b').fixSize(true,true);
-                        mdi.cells('b').setWidth(280);
-                        mdi.cells('b').collapse();
-                        mdi.cells('c').setText('Boletín');
-                        mdi.cells('c').fixSize(false,false);
-                        mdi.cells('d').setText('SILEJU');
-                        mdi.cells('d').fixSize(false,false);
-                        mdi.cells('d').attachURL('http://www.sileju.com');
-                        mdi.cells('d').collapse();
-                        mdi.attachEvent('onCollapse',(cell) => {
-                            if(cell==='d'){
-                                mdi.cells('a').layout.base.style.width='280px';
-                                mdi.cells('a').setWidth(280);
-                            }
-                        });
-                        mdi.attachEvent('onExpand',(cell) => {
-                            if(cell==='d'){
-                                mdi.cells('a').setWidth(0);
-                                mdi.cells('a').layout.base.style.width='0px';
-                                mdi.cells('c').setWidth(window.innerWidth/2);
-                                mdi.cells('d').setWidth(window.innerWidth/2);
-                            }
-                        });
+            var mdi      = null;
+            var menu     = null;
+            var ribbon   = null;
+            var toolbara = null;
+            var toolbarb = null;
+            var toolbarc = null;
+            var tree     = null;
+            var list     = null;
 
-                    let menu = mdi.attachMenu();
-                        menu.loadStruct([
-                            {id:'Archivo',text:'Archivo',img:'/icons/application.png',imgdis:'/icons/application.png',items:[
-                                {id:'formPassword',text:'Cambiar Password',img:'/icons/application_key.png',imgdis:'/icons/application_key.png'},
-                                {id:'formLogout',text:'Cerrar la Sesión',img:'/icons/time_delete.png',imgdis:'/icons/time_delete.png'},
-                                {id:'formClose',text:'Salir de la Aplicación',img:'/icons/application_delete.png',imgdis:'/icons/application_delete.png'}
-                            ]},
-                            {id:'Herramientas',text:'Herramientas',img:'/icons/application_view_tile.png',imgdis:'/icons/application_view_tile.png',items:[
-                                {id:'formBoletinesOnline',text:'Boletines Online',img:'/icons/page.png',imgdis:'/icons/page.png'},
-                                {id:'formAutoridades',text:'Administrar Autoridades',img:'/icons/user_gray.png',imgdis:'/icons/user_gray.png'}
-                            ]},
-                            {id:'Exportar',text:'Exportar',img:'/icons/html_go.png',imgdis:'/icons/html_go.png',items:[
-                                {id:'exportarAWORD',text:'Exportar a MS-WORD',img:'/icons/page_word.png',imgdis:'/icons/page_word.png'},
-                                {id:'exportarAWEB',text:'Exportar a la WEB',img:'/icons/page_world.png',imgdis:'/icons/page_world.png'},
-                                {id:'exportarAPDF',text:'Exportar a PDF',img:'/icons/page_white_acrobat.png',imgdis:'/icons/page_white_acrobat.png'}
-                            ]}
-                        ]);
-                        menu.attachEvent('onClick',(button) => {
-                            if(button==='formPassword')        $exe.formPassword();
-                            if(button==='formLogout')          $exe.formLogout();
-                            if(button==='formClose')           $exe.formClose();
-                            if(button==='formBoletinesOnline') $exe.formBoletinesOnline();
-                            if(button==='formAutoridades')     $exe.formAutoridades();
-                            if(button==='exportarAWORD')       $exe.exportarAWORD();
-                            if(button==='exportarAWEB')        $exe.exportarAWEB();
-                            if(button==='exportarAPDF')        $exe.exportarAPDF();
-                        });
+                window.onload = ()=>{
 
-                    let ribbon = mdi.attachRibbon();
-                        ribbon.loadStruct({tabs:[{id:'editor',text:'',active:true,items:[
-                            {type:'block', text:'Periodos', mode:'cols', list:[
-                                {id:'periodoNuevo',          type:'button', text:'Nuevo Periodo',     img:'/icons/folder_add.png'},
-                                {id:'periodoEditar',         type:'button', text:'Modificar Periodo', img:'/icons/folder_edit.png'},
-                                {id:'periodoEliminar',       type:'button', text:'Eliminar Periodo',  img:'/icons/folder_delete.png'}
-                            ]},
-                            {type:'block', text:'Boletines', mode:'cols', list:[
-                                {id:'boletinNuevo',          type:'button', text:'Nuevo Boletín',     img:'/icons/page_add.png'},
-                                {id:'boletinGuardar',        type:'button', text:'Guardar Boletin',   img:'/icons/page_save.png'},
-                                {id:'boletinEliminar',       type:'button', text:'Eliminar Boletín',  img:'/icons/page_delete.png'}
-                            ]},
-                            {type:'block', text:'Herramientas',model:'cols',list:[
-                                {id:'leyNuevoAMano',         type:'button', text:'Ley',             img:'/icons/report.png'},
-                                {id:'resolucionNuevoAMano',  type:'button', text:'Resolución',      img:'/icons/script.png'},
-                                {id:'declaracionNuevoAMano', type:'button', text:'Declaración',     img:'/icons/newspaper.png'},
-                                {id:'tableRowDelete',        type:'button', text:'Eliminar Fila',   img:'/icons/table_row_delete.png'},
-                                {id:'tableRowInsert',        type:'button', text:'Insertar Fila',   img:'/icons/table_row_insert.png'},
-                                {id:'buscarProyecto',        type:'button', text:'Buscar Proyecto', img:'/icons/page_find.png'},
-                                {id:'bloquearBoletin',       type:'button', text:'Bloquear',        img:'/icons/page_delete.png'},
-                                {id:'desBloquearBoletin',    type:'button', text:'Desbloquear',     img:'/icons/page_edit.png'}
-                            ]},
-                            {type:'block', text:'Lista de Tareas',model:'cols',list:[
-                                {id:'tareaNueva',            type:'button', text:'Tarea Nueva',    img:'/icons/tag_blue_add.png'},
-                                {id:'tareaModificar',        type:'button', text:'Tarea Editar',   img:'/icons/tag_blue_edit.png'},
-                                {id:'tareaEliminar',         type:'button', text:'Tarea Eliminar', img:'/icons/tag_blue_delete.png'}
-                            ]},
-                            {type:'block', text:'Exportar', model:'cols', list:[
-                                {id:'exportarAWORD',         type:'button', text:'Exportar a MS-WORD', img:'/icons/page_word.png'},
-                                {id:'exportarAWEB',          type:'button', text:'Exportar a la WEB',  img:'/icons/page_world.png'},
-                                {id:'exportarAPDF',          type:'button', text:'Exportar a PDF',     img:'/icons/page_white_acrobat.png'},
-                            ]}
-                        ]}]});
-                        ribbon.attachEvent('onClick',(button)=>{
-                            if(button==='periodoNuevo')          $exe.periodoNuevo();
-                            if(button==='periodoEditar')         $exe.periodoEditar();
-                            if(button==='periodoEliminar')       $exe.periodoEliminar();
-                            if(button==='boletinNuevo')          $exe.boletinNuevo();
-                            if(button==='boletinGuardar')        $exe.boletinGuardar();
-                            if(button==='boletinEliminar')       $exe.boletinEliminar();
-                            if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
-                            if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
-                            if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
-                            if(button==='tableRowDelete')        $exe.rowDelete();
-                            if(button==='tableRowInsert')        $exe.rowInsert();
-                            if(button==='buscarProyecto')        $exe.buscarProyecto();
-                            if(button==='bloquearBoletin')       $exe.bloquearBoletin();
-                            if(button==='desBloquearBoletin')    $exe.desBloquearBoletin();
-                            if(button==='tareaNueva')            $exe.tareaNueva();
-                            if(button==='tareaModificar')        $exe.tareaModificar();
-                            if(button==='tareaEliminar')         $exe.tareaEliminar();
-                            if(button==='exportarAWORD')         $exe.exportarAWORD();
-                            if(button==='exportarAWEB')          $exe.exportarAWEB();
-                            if(button==='exportarAPDF')          $exe.exportarAPDF();
-                        });
+                    mdi = new dhtmlXLayoutObject(document.body,'4A');
+                    mdi.cells('a').setText('Biblioteca');
+                    mdi.cells('a').fixSize(true,true);
+                    mdi.cells('a').setWidth(280);
+                    mdi.cells('a').setHeight(200);
+                    mdi.cells('b').setText('Tareas');
+                    mdi.cells('b').fixSize(true,true);
+                    mdi.cells('b').setWidth(280);
+                    mdi.cells('b').collapse();
+                    mdi.cells('c').setText('Boletín');
+                    mdi.cells('c').fixSize(false,false);
+                    mdi.cells('d').setText('SILEJU');
+                    mdi.cells('d').fixSize(false,false);
+                    mdi.cells('d').attachURL('http://www.sileju.com');
+                    mdi.cells('d').collapse();
+                    mdi.attachEvent('onCollapse',(cell) => {
+                        if(cell==='d'){
+                            mdi.cells('a').layout.base.style.width='280px';
+                            mdi.cells('a').setWidth(280);
+                        }
+                    });
+                    mdi.attachEvent('onExpand',(cell) => {
+                        if(cell==='d'){
+                            mdi.cells('a').setWidth(0);
+                            mdi.cells('a').layout.base.style.width='0px';
+                            mdi.cells('c').setWidth(window.innerWidth/2);
+                            mdi.cells('d').setWidth(window.innerWidth/2);
+                        }
+                    });
 
-                    let toolbara = mdi.cells('a').attachToolbar();
-                        toolbara.loadStruct([
-                            {id:'periodoNuevo',    type:'button', text:'', img:'/icons/folder_add.png'},
-                            {id:'periodoEditar',   type:'button', text:'', img:'/icons/folder_edit.png'},
-                            {id:'periodoEliminar', type:'button', text:'', img:'/icons/folder_delete.png'},
-                            {id:'boletinNuevo',    type:'button', text:'', img:'/icons/page_add.png'},
-                            {id:'boletinEliminar', type:'button', text:'', img:'/icons/page_delete.png'}
-                        ]);
-                        toolbara.attachEvent('onClick',(button)=>{
-                            if(button==='periodoNuevo')    $exe.periodoNuevo();
-                            if(button==='periodoEditar')   $exe.periodoEditar();
-                            if(button==='periodoEliminar') $exe.periodoEliminar();
-                            if(button==='boletinNuevo')    $exe.boletinNuevo();
-                            if(button==='boletinEliminar') $exe.boletinEliminar();
-                        });
+                    menu = mdi.attachMenu();
+                    menu.loadStruct([
+                        {id:'Archivo',text:'Archivo',img:'/icons/application.png',imgdis:'/icons/application.png',items:[
+                            {id:'formPassword',text:'Cambiar Password',img:'/icons/application_key.png',imgdis:'/icons/application_key.png'},
+                            {id:'formLogout',text:'Cerrar la Sesión',img:'/icons/time_delete.png',imgdis:'/icons/time_delete.png'},
+                            {id:'formClose',text:'Salir de la Aplicación',img:'/icons/application_delete.png',imgdis:'/icons/application_delete.png'}
+                        ]},
+                        {id:'Herramientas',text:'Herramientas',img:'/icons/application_view_tile.png',imgdis:'/icons/application_view_tile.png',items:[
+                            {id:'formBoletinesOnline',text:'Boletines Online',img:'/icons/page.png',imgdis:'/icons/page.png'},
+                            {id:'formAutoridades',text:'Administrar Autoridades',img:'/icons/user_gray.png',imgdis:'/icons/user_gray.png'}
+                        ]},
+                        {id:'Exportar',text:'Exportar',img:'/icons/html_go.png',imgdis:'/icons/html_go.png',items:[
+                            {id:'exportarAWORD',text:'Exportar a MS-WORD',img:'/icons/page_word.png',imgdis:'/icons/page_word.png'},
+                            {id:'exportarAWEB',text:'Exportar a la WEB',img:'/icons/page_world.png',imgdis:'/icons/page_world.png'},
+                            {id:'exportarAPDF',text:'Exportar a PDF',img:'/icons/page_white_acrobat.png',imgdis:'/icons/page_white_acrobat.png'}
+                        ]}
+                    ]);
+                    menu.attachEvent('onClick',(button) => {
+                        if(button==='formPassword')        $exe.formPassword();
+                        if(button==='formLogout')          $exe.formLogout();
+                        if(button==='formClose')           $exe.formClose();
+                        if(button==='formBoletinesOnline') $exe.formBoletinesOnline();
+                        if(button==='formAutoridades')     $exe.formAutoridades();
+                        if(button==='exportarAWORD')       $exe.exportarAWORD();
+                        if(button==='exportarAWEB')        $exe.exportarAWEB();
+                        if(button==='exportarAPDF')        $exe.exportarAPDF();
+                    });
+
+                    ribbon = mdi.attachRibbon();
+                    ribbon.loadStruct({tabs:[{id:'editor',text:'',active:true,items:[
+                        {type:'block', text:'Periodos', mode:'cols', list:[
+                            {id:'periodoNuevo',          type:'button', text:'Nuevo Periodo',     img:'/icons/folder_add.png'},
+                            {id:'periodoEditar',         type:'button', text:'Modificar Periodo', img:'/icons/folder_edit.png'},
+                            {id:'periodoEliminar',       type:'button', text:'Eliminar Periodo',  img:'/icons/folder_delete.png'}
+                        ]},
+                        {type:'block', text:'Boletines', mode:'cols', list:[
+                            {id:'boletinNuevo',          type:'button', text:'Nuevo Boletín',     img:'/icons/page_add.png'},
+                            {id:'boletinGuardar',        type:'button', text:'Guardar Boletin',   img:'/icons/page_save.png'},
+                            {id:'boletinEliminar',       type:'button', text:'Eliminar Boletín',  img:'/icons/page_delete.png'}
+                        ]},
+                        {type:'block', text:'Herramientas',model:'cols',list:[
+                            {id:'leyNuevoAMano',         type:'button', text:'Ley',             img:'/icons/report.png'},
+                            {id:'resolucionNuevoAMano',  type:'button', text:'Resolución',      img:'/icons/script.png'},
+                            {id:'declaracionNuevoAMano', type:'button', text:'Declaración',     img:'/icons/newspaper.png'},
+                            {id:'tableRowDelete',        type:'button', text:'Eliminar Fila',   img:'/icons/table_row_delete.png'},
+                            {id:'tableRowInsert',        type:'button', text:'Insertar Fila',   img:'/icons/table_row_insert.png'},
+                            {id:'buscarProyecto',        type:'button', text:'Buscar Proyecto', img:'/icons/page_find.png'},
+                            {id:'bloquearBoletin',       type:'button', text:'Bloquear',        img:'/icons/page_delete.png'},
+                            {id:'desBloquearBoletin',    type:'button', text:'Desbloquear',     img:'/icons/page_edit.png'}
+                        ]},
+                        {type:'block', text:'Lista de Tareas',model:'cols',list:[
+                            {id:'tareaNueva',            type:'button', text:'Tarea Nueva',    img:'/icons/tag_blue_add.png'},
+                            {id:'tareaModificar',        type:'button', text:'Tarea Editar',   img:'/icons/tag_blue_edit.png'},
+                            {id:'tareaEliminar',         type:'button', text:'Tarea Eliminar', img:'/icons/tag_blue_delete.png'}
+                        ]},
+                        {type:'block', text:'Exportar', model:'cols', list:[
+                            {id:'exportarAWORD',         type:'button', text:'Exportar a MS-WORD', img:'/icons/page_word.png'},
+                            {id:'exportarAWEB',          type:'button', text:'Exportar a la WEB',  img:'/icons/page_world.png'},
+                            {id:'exportarAPDF',          type:'button', text:'Exportar a PDF',     img:'/icons/page_white_acrobat.png'},
+                        ]}
+                    ]}]});
+                    ribbon.attachEvent('onClick',(button)=>{
+                        if(button==='periodoNuevo')          $exe.periodoNuevo();
+                        if(button==='periodoEditar')         $exe.periodoEditar();
+                        if(button==='periodoEliminar')       $exe.periodoEliminar();
+                        if(button==='boletinNuevo')          $exe.boletinNuevo();
+                        if(button==='boletinGuardar')        $exe.boletinGuardar();
+                        if(button==='boletinEliminar')       $exe.boletinEliminar();
+                        if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
+                        if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
+                        if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
+                        if(button==='tableRowDelete')        $exe.rowDelete();
+                        if(button==='tableRowInsert')        $exe.rowInsert();
+                        if(button==='buscarProyecto')        $exe.buscarProyecto();
+                        if(button==='bloquearBoletin')       $exe.bloquearBoletin();
+                        if(button==='desBloquearBoletin')    $exe.desBloquearBoletin();
+                        if(button==='tareaNueva')            $exe.tareaNueva();
+                        if(button==='tareaModificar')        $exe.tareaModificar();
+                        if(button==='tareaEliminar')         $exe.tareaEliminar();
+                        if(button==='exportarAWORD')         $exe.exportarAWORD();
+                        if(button==='exportarAWEB')          $exe.exportarAWEB();
+                        if(button==='exportarAPDF')          $exe.exportarAPDF();
+                    });
+
+                    toolbara = mdi.cells('a').attachToolbar();
+                    toolbara.loadStruct([
+                        {id:'periodoNuevo',    type:'button', text:'', img:'/icons/folder_add.png'},
+                        {id:'periodoEditar',   type:'button', text:'', img:'/icons/folder_edit.png'},
+                        {id:'periodoEliminar', type:'button', text:'', img:'/icons/folder_delete.png'},
+                        {id:'boletinNuevo',    type:'button', text:'', img:'/icons/page_add.png'},
+                        {id:'boletinEliminar', type:'button', text:'', img:'/icons/page_delete.png'}
+                    ]);
+                    toolbara.attachEvent('onClick',(button)=>{
+                        if(button==='periodoNuevo')    $exe.periodoNuevo();
+                        if(button==='periodoEditar')   $exe.periodoEditar();
+                        if(button==='periodoEliminar') $exe.periodoEliminar();
+                        if(button==='boletinNuevo')    $exe.boletinNuevo();
+                        if(button==='boletinEliminar') $exe.boletinEliminar();
+                    });
                     
-                    let toolbarb = mdi.cells('b').attachToolbar();
-                        toolbarb.loadStruct([
-                            {id:'tareaNueva',     type:'button', text:'', img:'/icons/tag_blue_add.png'},
-                            {id:'tareaModificar', type:'button', text:'', img:'/icons/tag_blue_edit.png'},
-                            {id:'tareaEliminar',  type:'button', text:'', img:'/icons/tag_blue_delete.png'}
-                        ]);
-                        toolbarb.attachEvent('onClick',(button)=>{
-                            if(button==='tareaNueva')     $exe.tareaNueva();
-                            if(button==='tareaModificar') $exe.tareaModificar();
-                            if(button==='tareaEliminar')  $exe.tareaEliminar();
-                        });
+                    toolbarb = mdi.cells('b').attachToolbar();
+                    toolbarb.loadStruct([
+                        {id:'tareaNueva',     type:'button', text:'', img:'/icons/tag_blue_add.png'},
+                        {id:'tareaModificar', type:'button', text:'', img:'/icons/tag_blue_edit.png'},
+                        {id:'tareaEliminar',  type:'button', text:'', img:'/icons/tag_blue_delete.png'}
+                    ]);
+                    toolbarb.attachEvent('onClick',(button)=>{
+                        if(button==='tareaNueva')     $exe.tareaNueva();
+                        if(button==='tareaModificar') $exe.tareaModificar();
+                        if(button==='tareaEliminar')  $exe.tareaEliminar();
+                    });
 
-                    let toolbarc = mdi.cells('c').attachToolbar();
-                        toolbarc.loadStruct([
-                            {id:'boletinGuardar',        type:'button', text:'', img:'/icons/page_save.png'},
-                            {id:'leyNuevoAMano',         type:'button', text:'', img:'/icons/report.png'},
-                            {id:'resolucionNuevoAMano',  type:'button', text:'', img:'/icons/script.png'},
-                            {id:'declaracionNuevoAMano', type:'button', text:'', img:'/icons/newspaper.png'},
-                            {id:'tableRowDelete',        type:'button', text:'', img:'/icons/table_row_delete.png'},
-                            {id:'tableRowInsert',        type:'button', text:'', img:'/icons/table_row_insert.png'},
-                            {id:'buscarProyecto',        type:'button', text:'', img:'/icons/page_find.png'},
-                            {id:'boletinBloquear',       type:'button', text:'', img:'/icons/page_delete.png'},
-                            {id:'boletinDesbloquear',    type:'button', text:'', img:'/icons/page_edit.png'},
-                            {id:'exportarAWORD',         type:'button', text:'', img:'/icons/page_word.png'},
-                            {id:'exportarAWEB',          type:'button', text:'', img:'/icons/page_world.png'},
-                            {id:'exportarAPDF',          type:'button', text:'', img:'/icons/page_white_acrobat.png'},7
-                        ]);
-                        toolbarc.attachEvent('onClick',(button)=>{
-                            if(button==='boletinGuardar')        $exe.boletinGuardar();
-                            if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
-                            if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
-                            if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
-                            if(button==='tableRowDelete')        $exe.rowDelete();
-                            if(button==='tableRowInsert')        $exe.rowInsert();
-                            if(button==='buscarProyecto')        $exe.buscarProyecto();
-                            if(button==='boletinBloquear')       $exe.boletinBloquear();
-                            if(button==='boletinDesbloquear')    $exe.boletinDesbloquear();
-                            if(button==='exportarAWORD')         $exe.exportarAWORD();
-                            if(button==='exportarAWEB')          $exe.exportarAWEB();
-                            if(button==='exportarAPDF')          $exe.exportarAPDF();
-                        });
+                    toolbarc = mdi.cells('c').attachToolbar();
+                    toolbarc.loadStruct([
+                        {id:'boletinGuardar',        type:'button', text:'', img:'/icons/page_save.png'},
+                        {id:'leyNuevoAMano',         type:'button', text:'', img:'/icons/report.png'},
+                        {id:'resolucionNuevoAMano',  type:'button', text:'', img:'/icons/script.png'},
+                        {id:'declaracionNuevoAMano', type:'button', text:'', img:'/icons/newspaper.png'},
+                        {id:'tableRowDelete',        type:'button', text:'', img:'/icons/table_row_delete.png'},
+                        {id:'tableRowInsert',        type:'button', text:'', img:'/icons/table_row_insert.png'},
+                        {id:'buscarProyecto',        type:'button', text:'', img:'/icons/page_find.png'},
+                        {id:'boletinBloquear',       type:'button', text:'', img:'/icons/page_delete.png'},
+                        {id:'boletinDesbloquear',    type:'button', text:'', img:'/icons/page_edit.png'},
+                        {id:'exportarAWORD',         type:'button', text:'', img:'/icons/page_word.png'},
+                        {id:'exportarAWEB',          type:'button', text:'', img:'/icons/page_world.png'},
+                        {id:'exportarAPDF',          type:'button', text:'', img:'/icons/page_white_acrobat.png'},7
+                    ]);
+                    toolbarc.attachEvent('onClick',(button)=>{
+                        if(button==='boletinGuardar')        $exe.boletinGuardar();
+                        if(button==='leyNuevoAMano')         $exe.leyNuevoAMano();
+                        if(button==='resolucionNuevoAMano')  $exe.resolucionNuevoAMano();
+                        if(button==='declaracionNuevoAMano') $exe.declaracionNuevoAMano();
+                        if(button==='tableRowDelete')        $exe.rowDelete();
+                        if(button==='tableRowInsert')        $exe.rowInsert();
+                        if(button==='buscarProyecto')        $exe.buscarProyecto();
+                        if(button==='boletinBloquear')       $exe.boletinBloquear();
+                        if(button==='boletinDesbloquear')    $exe.boletinDesbloquear();
+                        if(button==='exportarAWORD')         $exe.exportarAWORD();
+                        if(button==='exportarAWEB')          $exe.exportarAWEB();
+                        if(button==='exportarAPDF')          $exe.exportarAPDF();
+                    });
 
-                    var tree = mdi.cells('a').attachTree();
-                        tree.setImagesPath('imgs/dhxtree_material/');
-                        tree.load('/models/model/tree/init','json');
-                        tree.attachEvent('onSelect',$exe.boletinEditar);
+                    tree = mdi.cells('a').attachTree();
+                    tree.setImagesPath('/');
+                    tree.load('/models/model/tree/init','json');
+                    tree.attachEvent('onSelect',$exe.boletinEditar);
 
-                    let list = mdi.cells('b').attachList();
-                        list.define('type',{template:"<strong>#titulo#</strong>:<br/>#tarea#",width:270,margin:5});
-
+                    list = mdi.cells('b').attachList();
+                    list.define('type',{template:"<strong>#titulo#</strong>:<br/>#tarea#",width:270,margin:5});
+                    
+                };
         </script>
-</body>
+    </body>
 </html>

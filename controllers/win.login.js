@@ -37,14 +37,13 @@ var winLogin  = new Object();
                 icon        : icon,
                 frame       : true,
                 modal       : true,
-                nodeIntegration  : false,
+                nodeIntegration  : true,
                 contextIsolation : true,
-                allowRunningInsecureContent : true,
                 webPreferences : {
                     webSecurity:false,
-                    allowDisplayingInsecureContent:false,
-                    allowRunningInsecureContent:true,
-                    devTools:true
+                    allowRunningInsecureContent : true,
+                    allowDisplayingInsecureContent:true,
+                    devTools:false
                 }
             });
             winLogin.window.loadURL(view);

@@ -38,12 +38,13 @@ var winMdi           = new Object();
                 icon        : icon,
                 frame       : true,
                 modal       : false,
+                nodeIntegration  : true,
                 contextIsolation : true,
-                allowRunningInsecureContent : false,
                 webPreferences : {
-                    nodeIntegration : true,
-                    sandbox : false,
-                    devTools : true
+                    webSecurity:false,
+                    allowRunningInsecureContent : true,
+                    allowDisplayingInsecureContent:true,
+                    devTools:false
                 }
             });
             winMdi.window.loadURL(view);

@@ -37,7 +37,7 @@
             var $window   = $electron.remote.BrowserWindow;
             var $dialog   = $electron.remote.dialog;
 
-                window.addEventListener('load',()=>{
+                window.onload = ()=>{
 
                     let layout = new dhtmlXLayoutObject(document.body,'1C');
                         layout.cells('a').setText('');
@@ -85,7 +85,7 @@
                             }
                         });
 
-                });
+                };
         </script>
     </body>
 </html>

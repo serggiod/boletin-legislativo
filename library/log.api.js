@@ -61,7 +61,7 @@ var logApi = new Object();
 
                         logArray = JSON.stringify(logArray);
 
-                        $fs.writeFile(logApi.logSuccessPath,logArray,{ecoding:'utf8'},()=>{});
+                        $fs.writeFileSync(logApi.logSuccessPath,logArray,'utf8');
                     }
                 })
             }
@@ -76,9 +76,9 @@ var logApi = new Object();
 
                         logArray = JSON.stringify(logArray);
 
-                        $fs.writeFile(logApi.logErrorsPath,logArray,{ecoding:'utf8'},()=>{});
+                        $fs.writeFileSync(logApi.logErrorsPath,logArray,'utf8');
                     }
-                })
+                });
             }
 
     };
