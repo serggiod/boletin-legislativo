@@ -14,10 +14,10 @@ var $httpPort   = $mode.build.server.baseHref.match(/[0-9]{2,4}\/$/gi).join('').
 // Controladores.
 var winLogin   = require('./controllers/win.login');
 
-/* APPLICATION; ExpressJS. */
+/* APPLICATION; ExpressJS.*/
 let applicationExpress = $express();
 
-/* APPLICATION; ElectronsJS. */
+/* APPLICATION; ElectronsJS.*/
 var applicationElectron = $electron.app;
     applicationElectron.on('window-all-closed',applicationElectron.quit);
     applicationElectron.on('ready',()=>{
