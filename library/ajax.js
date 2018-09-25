@@ -1,3 +1,5 @@
+//var XMLHttpRequest = XMLHttpRequest || Windows.XMLHttpRequest || require("xmlhttprequest").XMLHttpRequest;
+//var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var ajax = new XMLHttpRequest();
     ajax.schema         = new Object();
     ajax.schema.method  = 'GET';

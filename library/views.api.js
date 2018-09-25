@@ -123,7 +123,7 @@ var viewsApi = {
         formUsuarios.center();
         formUsuarios.openDevTools();    
     },
-    //formBoletinesOnline:
+    //formBoletinesOnline:ok
     formBoletinesOnline : () => {
         let icon = $path.join(__dirname,'/../assets/');
             if(process.platform==='win32')  icon += 'icon.ico';
@@ -133,8 +133,8 @@ var viewsApi = {
             icon        : icon,
             title       : 'Administrar Boletines Online',
             parent      : $electron.remote.getCurrentWindow(),
-            width       : 620,
-            height      : 300,
+            width       : 1000,
+            height      : 600,
             modal       : true,
             frame       : true,
             resizable   : false,
@@ -144,7 +144,7 @@ var viewsApi = {
                 webSecurity:false,
                 allowRunningInsecureContent : true,
                 allowDisplayingInsecureContent:true,
-                devTools:false
+                devTools:true
             }
         });
         formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html');
@@ -1137,29 +1137,12 @@ var viewsApi = {
                     });
         }
     },
+    //exportarAWEB:ok
     exportarAWEB : () => {
         let id = tree.getSelectedItemId();
         let name = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
-        let indexp = tree.getIndexById(parent);
-        let indexb = tree.getIndexById(id);
-        if(parent!=0){
-            mdi.progressOn();
-            let url = 'models/model/tree/exportar/pdf/' + name;
-                dhx.ajax().post(url,null,(json)=>{
-                    json = JSON.parse(json);
-                    if(json.result===true){
-                        let xhr = dhx.ajax().post('models/model/tree/exportar/web/' + indexp + '.' + indexb + '.' + name);
-                            xhr.onload = xhr => {
-                                mdi.progressOff();
-                                json = JSON.parse(xhr.target.responseText);
-                                if(json.result===true) dhtmlx.message({text:'El Boletín Legislativo se publico en forma correcta.',type:'success'});
-                                else dhtmlx.message({text:'No se pudo publicar el Boletín Legislativo.',type:'error'});
-                                $exe.formBoletinesOnline();
-                            };
-                        }
-                });
-        }
+        if(parent!=0) viewsApi.formBoletinesOnline();
     }
 };
 module.exports = viewsApi;

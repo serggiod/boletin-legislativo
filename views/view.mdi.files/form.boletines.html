@@ -30,6 +30,7 @@
                 
             var $fs       = require('fs');
             var $path     = require('path');
+            var $md5      = require('js-md5');
             var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
             var $exe      = require(process.env.INIT_CWD + '/library/views.api');
             var $electron = require('electron');
@@ -40,48 +41,61 @@
                 window.onload = ()=>{
 
                     let layout = new dhtmlXLayoutObject(document.body,'1C');
-                        layout.cells('a').setText('');
-                        layout.cells('a').hideHeader();
+                        layout.cells('a').setText('Autorización a Boletines publicados en la Página Web');
 
-                    let url = '/models/model/tree/remote/boletines';
 
-                    let grid = layout.cells('a').attachGrid();
-                        grid.setHeader('Periodo,Número,Año,Fecha');
-                        grid.setInitWidths('*,150,150,150');
-                        grid.setColAlign('center,center,center,center');
-                        grid.setColTypes('ro,ro,ro,ro');
-                        grid.setColSorting('str,str,str,str');
-                        grid.load(url,'json');
-                        grid.init();
-                        
+                    let aceptar = ()=>{
+                        if(form.validate()){
+
+                            let url = '/models/model/tree/remote/oauth';
+                            let header = {'Content-Type':'application/json'};
+                            let body = new Object();
+                                body.user = form.getItemValue('ruser');
+                                body.user = body.user.match(/[a-z0--]/gi);
+                                body.user = body.user.join('');
+                                body.pass = form.getItemValue('rpass');
+                                body.pass = body.pass.match(/[a-z0-9]{4,10}/gi);
+                                body.pass = body.pass.join('');
+                                body.pass = $md5(body.pass);
+                            
+                                $ajax
+                                    .header(header)
+                                    .body(body)
+                                    .post(url,(json)=>{
+                                        if(json.result===true) location.path('form.boletines.grid.html');
+                                        else dhtmlx.alert({
+                                            type:'alert-error',
+                                            text:'El usuario o el password son incorrectos.',
+                                            ok:'Aceptar',
+                                            callback:()=>{
+                                                form.setItemValue('ruser','');
+                                                form.setItemValue('rpass','');
+                                                form.setFocus('ruser');
+                                            }
+                                        });
+                                    })
+                        }
+                    };
+
+                    let cancelar = ()=>{
+                        $electron.remote.getCurrentWindow().close();
+                    };
                     
-                    let eliminar = () => {
-                        layout.cells('a').progressOn();
-                            let id = grid.getSelectedRowId();
-                            let fname = grid.cells(id,1).getValue() + '-' + grid.cells(id,2).getValue();
-                            if(id===null) dialog.showErrorBox('Error','Debe seleccionar una fila.');
-                            else {
-                                if(confirm('¿Esta seguro que desea eliminar el boletín seleccionado?')){
-                                    let url = '/models/model/tree/remote/boletin/' + id + '/' + fname;
-                                        dhx
-                                            .ajax()
-                                            .del(url,{},(json)=>{
-                                                layout.cells('a').progressOff();
-                                                json = JSON.parse(json);
-                                                if(json.result===true) grid.deleteRow(id);
-                                                else dialog.showErrorBox('Error','No se pudo borrar el usuario.');
-                                            });
-                                }
-                            }
-                        };
+                    let form = layout.cells('a').attachForm();
+                        form.loadStruct([
+                            {type:'input',name:'ruser',label:'SILEJU user:',maxLength:13,required:true},
+                            {type:'password',name:'rpass',label:'SILEJU pass:',maxLength:18,required:true}
+                        ]);
 
                     let toolbar = layout.cells('a').attachToolbar();
                         toolbar.loadStruct([
-                            {id:'eliminar',  type:'button', text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'}
+                            {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/acept.png'},
+                            {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/camcel.png'}
                         ]);
                         toolbar.attachEvent('onClick',(button)=>{
                             switch(button){
-                                case 'eliminar': eliminar(); break;
+                                case 'aceptar':  aceptar(); break;
+                                case 'cancelar': cancelar(); break;
                             }
                         });
 

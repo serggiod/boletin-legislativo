@@ -6,8 +6,9 @@ var $unique   = require('uniqid');
 var $express  = require('express');
 var $router   = $express.Router();
 var $htmlPdf  = require('html-pdf');
-var $HtmlDocx  = require('html-docx-js');
-var $Mysql     = require('mysql');
+var $HtmlDocx = require('html-docx-js');
+var $request  = require('request');
+var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
 var $sshconn   = require('ssh2-connect');
 var $sshexec   = require('ssh2-exec');
 var $sshclient = require('scp2');
@@ -1145,10 +1146,25 @@ $router.get('/exportar/pdf/:file',($rq,$rs)=>{
     } else $rs.sendStatus(404);
 });
 
-/*// Remoto.
-router.get('/remote/boletines',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let sql = "CALL electronjsDDSBoletines();";
+// Remoto.
+
+$router.post('/remote/oauth',($rq,$rs)=>{
+    if($rq.session.status===true){
+
+        let log = $rq.session.user.nombre + ' ' + $rq.sesion.user.apellido;
+            log = log + ' POST /models/model/tree/remote/oauth';
+
+        let user = new Object();
+            user.cuil = $rq.body.user;
+            user.cuil = user.cuil.match();
+            user.cuil = user.cuil.join('');
+            user.pass = $rq.body.pass;
+            user.pass = user.pass.match();
+            user.pass = user.pass.join();
+
+        let url = 'https://localhost/rest/ful/session.php/login';
+
+        /*let sql = "CALL electronjsDDSBoletines();";
         let conf = fs.readFileSync(__dirname+'/../conf/mysql.json','UTF-8');
             conf = JSON.parse(conf);
         let mysql = Mysql.createConnection(conf);
@@ -1173,10 +1189,10 @@ router.get('/remote/boletines',(rq,rs,n)=>{
                             } else $rs.send({result:false,rows:null});
                     });
                 } else $rs.send({result:false,rows:null});
-            });
-    } else $rs.status(404).send();
+            });*/
+    } else $rs.sendStatus(404);
 });
-router.delete('/remote/boletin/:id/:fname',(rq,rs,n)=>{
+/*router.delete('/remote/boletin/:id/:fname',(rq,rs,n)=>{
     if(rq.session.status===true){
         let id = rq.params.id.match(/[0-9]/g).join('');
         let fname = rq.params.fname.match(/[0-9\-]/g).join('');

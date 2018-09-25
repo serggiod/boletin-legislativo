@@ -21,6 +21,8 @@ let applicationExpress = $express();
 var applicationElectron = $electron.app;
     applicationElectron.on('window-all-closed',applicationElectron.quit);
     applicationElectron.on('ready',()=>{
+
+        applicationElectron.commandLine.appendSwitch('ignore-certificate-errors', true);
           
         if($mode.mode==='server'){
 
