@@ -40,63 +40,118 @@
 
                 window.onload = ()=>{
 
+                    sessionStorage.setItem('remote-login',false);
+                    sessionStorage.setItem('remote-user',null);
+                    sessionStorage.setItem('remote-pass',null);
+
+                    let url    = new URL(document.location);
+                    let params = url.searchParams;
+                    let file   = params.get('file');
+                        console.log(file);
+
                     let layout = new dhtmlXLayoutObject(document.body,'1C');
-                        layout.cells('a').setText('Autorización a Boletines publicados en la Página Web');
-
-
-                    let aceptar = ()=>{
-                        if(form.validate()){
-
-                            let url = '/models/model/tree/remote/oauth';
-                            let header = {'Content-Type':'application/json'};
-                            let body = new Object();
-                                body.user = form.getItemValue('ruser');
-                                body.user = body.user.match(/[a-z0--]/gi);
-                                body.user = body.user.join('');
-                                body.pass = form.getItemValue('rpass');
-                                body.pass = body.pass.match(/[a-z0-9]{4,10}/gi);
-                                body.pass = body.pass.join('');
-                                body.pass = $md5(body.pass);
-                            
-                                $ajax
-                                    .header(header)
-                                    .body(body)
-                                    .post(url,(json)=>{
-                                        if(json.result===true) location.path('form.boletines.grid.html');
-                                        else dhtmlx.alert({
-                                            type:'alert-error',
-                                            text:'El usuario o el password son incorrectos.',
-                                            ok:'Aceptar',
-                                            callback:()=>{
-                                                form.setItemValue('ruser','');
-                                                form.setItemValue('rpass','');
-                                                form.setFocus('ruser');
-                                            }
-                                        });
-                                    })
-                        }
-                    };
-
-                    let cancelar = ()=>{
-                        $electron.remote.getCurrentWindow().close();
-                    };
-                    
-                    let form = layout.cells('a').attachForm();
-                        form.loadStruct([
-                            {type:'input',name:'ruser',label:'SILEJU user:',maxLength:13,required:true},
-                            {type:'password',name:'rpass',label:'SILEJU pass:',maxLength:18,required:true}
-                        ]);
+                        layout.cells('a').setText('Boletines publicados en la Página Web');
+                        layout.progressOn();
 
                     let toolbar = layout.cells('a').attachToolbar();
                         toolbar.loadStruct([
-                            {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/acept.png'},
-                            {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/camcel.png'}
+                            {id:'eliminar',  type:'button', text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'}
                         ]);
                         toolbar.attachEvent('onClick',(button)=>{
-                            switch(button){
-                                case 'aceptar':  aceptar(); break;
-                                case 'cancelar': cancelar(); break;
+                            if(button=='eliminar'){
+                                alert('Eliminar este boletin de la pagina web.');
                             }
+                        });
+
+                    let grid = layout.cells('a').attachGrid();
+                        grid.setHeader('Periodo,Número,Tipo,Año,Fecha');
+                        grid.setInitWidths('*,150,150,150,150');
+                        grid.setColAlign('center,center,center,center,center');
+                        grid.setColTypes('ro,ro,ro,ro,ro');
+                        grid.setColSorting('str,str,str,str,str');
+                        //grid.load(url,'json');
+                        grid.init();
+
+                    let window = new dhtmlXWindows();
+                        window.createWindow('window',0,0,400,180);
+                        window.window('window').setText('Autenticarse en el servidor remoto');
+                        window.window('window').setModal(true);
+                        window.window('window').denyMove();
+                        window.window('window').denyPark();
+                        window.window('window').denyResize();
+                        window.window('window').button('close').hide();
+                        window.window('window').center();
+
+                    let windowToolbar = window.window('window').attachToolbar();
+                        windowToolbar.loadStruct([
+                            {id:'aceptar',  type:'button', text:'Aceptar',  img:'/icons/accept.png', imgdis:'/icons/accept.png'},
+                            {id:'cancelar', type:'button', text:'Cancelar', img:'/icons/cancel.png', imgdis:'/icons/cancel.png'}
+                        ]);
+                        windowToolbar.attachEvent('onClick',(button)=>{
+                            if(button==='aceptar') {
+                                
+                                let url = new String();
+                                    url = 'https://localhost:8000/boletin/auth';
+
+                                let header = new Object();
+                                    header['Content-Type'] = 'application/json';
+
+                                let body = new Object();
+                                    body.user = windowForm.getItemValue('ruser');
+                                    body.user = body.user.match(/[a-z0-9\-]{13}/gi);
+                                    body.user = body.user.join('');
+                                    body.pass = windowForm.getItemValue('rpass');
+                                    body.pass = body.pass.match(/[a-z0-9]{32}/gi);
+                                    body.pass = body.pass.join('');
+
+                                    $ajax
+                                        .setMode('module')
+                                        .header(header)
+                                        .body(body)
+                                        .post(url,(json)=>{
+                                            
+                                            console.log(json);
+                                            
+                                            if(json.result===true){
+                                                sessionStorage.setItem('remote-login',true);
+                                                sessionStorege.setItem('remote-user',body.user);
+                                                sessionStorage.setItem('remote-pass',body.pass);
+
+                                                window.window('window').close();
+                                                alert('Hola ahora pueders enviar tu archivo.');
+                                            }
+
+                                            else dhtmlx.alert({
+                                                title:'Error',
+                                                text:'El usuario no se pudo autenmticar.',
+                                                ok:'Aceptar'
+                                            });
+                                        });
+                            }
+
+                            if(button==='cancelar') {
+                                sessionStorage.setItem('remote-login',false);
+                                sessionStorage.setItem('remote-user',null);
+                                sessionStorage.setItem('remote-pass',null);
+                                $electron.remote.getCurrentWindow().close();
+                            }
+
+                        });
+
+                    let windowForm = window.window('window').attachForm();
+                        windowForm.loadStruct([
+                            {type:'block',width:300,position:'absolute',offsetLeft:50, list:[
+                                {type:'input',    name:'ruser', label:'SILEJU Cuil:', maxLength:13, required:true},
+                                {type:'password', name:'rpass', label:'SILEJU Pass:', maxLength:10, required:true}
+                            ]}
+                        ]);
+                        windowForm.enableLiveValidation(true);
+
+
+                        $electron.remote.getCurrentWindow().on('close',()=>{
+                            sessionStorage.setItem('remote-login',false);
+                            sessionStorage.setItem('remote-user',null);
+                            sessionStorage.setItem('remote-pass',null);
                         });
 
                 };

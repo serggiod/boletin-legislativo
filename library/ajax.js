@@ -1,6 +1,5 @@
-//var XMLHttpRequest = XMLHttpRequest || Windows.XMLHttpRequest || require("xmlhttprequest").XMLHttpRequest;
-//var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-var ajax = new XMLHttpRequest();
+var ajax = new Object();
+    ajax.mode           = 'object';
     ajax.schema         = new Object();
     ajax.schema.method  = 'GET';
     ajax.schema.params  = null;
@@ -10,29 +9,35 @@ var ajax = new XMLHttpRequest();
 
     ajax.request = ()=>{
 
-        ajax.open(ajax.schema.method,ajax.schema.url);
-        ajax.withCredentials = true;
+        let $ajax   = null;
+        let XMLHttp = null;
+            if(ajax.mode==='object') XMLHttp = window.XMLHttpRequest;
+            if(ajax.mode==='module') XMLHttp = require("xmlhttprequest").XMLHttpRequest;
+            $ajax = new XMLHttp();
+        
+        $ajax.open(ajax.schema.method,ajax.schema.url);
+        $ajax.withCredentials = true;
 
         if(ajax.schema.headers!=null){
             for(key in ajax.schema.headers){
-                ajax.setRequestHeader(key,ajax.schema.headers[key]);
+                $ajax.setRequestHeader(key,ajax.schema.headers[key]);
             }
         }
         
-        ajax.onreadystatechange = ()=>{
-            if(ajax.readyState===4 && ajax.status===200){
-                let header = ajax.getResponseHeader('Content-Type');
+        $ajax.onreadystatechange = ()=>{
+            if($ajax.readyState===4 && $ajax.status===200){
+                let header = $ajax.getResponseHeader('Content-Type');
                 let response = null;
-                    if(header.indexOf('json')>=1) response = JSON.parse(ajax.responseText);
-                    else response = ajax.responseText;
+                    if(header.indexOf('json')>=1) response = JSON.parse($ajax.responseText);
+                    else response = $ajax.responseText;
                     ajax.schema.callback(response);                
             }
         };
 
         if(ajax.schema.method==='POST'||ajax.schema.method==='PUT'){
-           if(ajax.schema.body) ajax.send(ajax.schema.body);
-            else ajax.send(null);
-        } else ajax.send(null);
+           if(ajax.schema.body) $ajax.send(ajax.schema.body,false);
+            else $ajax.send(null,false);
+        } else $ajax.send(null,false);
 
     };
     ajax.header = (headers)=>{
@@ -97,5 +102,10 @@ var ajax = new XMLHttpRequest();
         ajax.schema.method = 'DELETE';
         ajax.schema.callback = callback;
         ajax.request();
+    };
+    ajax.setMode = (mode)=>{
+        if(mode) ajax.mode = mode;
+        else ajax.mode = 'object';
+        return ajax;
     };
     module.exports = ajax;

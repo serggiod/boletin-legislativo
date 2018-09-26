@@ -124,7 +124,7 @@ var viewsApi = {
         formUsuarios.openDevTools();    
     },
     //formBoletinesOnline:ok
-    formBoletinesOnline : () => {
+    formBoletinesOnline : (file) => {
         let icon = $path.join(__dirname,'/../assets/');
             if(process.platform==='win32')  icon += 'icon.ico';
             if(process.platform==='linux')  icon += 'icon.png';
@@ -147,7 +147,7 @@ var viewsApi = {
                 devTools:true
             }
         });
-        formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html');
+        formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html?file=' + file);
         formBoletines.setMenu(null);
         formBoletines.center();
         formBoletines.openDevTools();
@@ -1140,9 +1140,9 @@ var viewsApi = {
     //exportarAWEB:ok
     exportarAWEB : () => {
         let id = tree.getSelectedItemId();
-        let name = tree.getSelectedItemText().replace('/','-');
+        let file = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
-        if(parent!=0) viewsApi.formBoletinesOnline();
+        if(parent!=0) viewsApi.formBoletinesOnline(file);
     }
 };
 module.exports = viewsApi;

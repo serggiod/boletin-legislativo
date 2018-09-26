@@ -2,16 +2,17 @@ var $fs       = require('fs');
 var $path     = require('path');
 var $db       = require('../library/model.api');
 var $log      = require('../library/log.api');
+var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
 var $unique   = require('uniqid');
 var $express  = require('express');
 var $router   = $express.Router();
 var $htmlPdf  = require('html-pdf');
 var $HtmlDocx = require('html-docx-js');
-var $request  = require('request');
-var $ajax     = require(process.env.INIT_CWD + '/library/ajax');
-var $sshconn   = require('ssh2-connect');
-var $sshexec   = require('ssh2-exec');
-var $sshclient = require('scp2');
+var $https    = require('https');
+//var $request  = require('request');
+//var $sshconn   = require('ssh2-connect');
+//var $sshexec   = require('ssh2-exec');
+//var $sshclient = require('scp2');
 
 // $router.all('/':ok
 $router.all('/',($rq,$rs)=>{
@@ -1147,22 +1148,61 @@ $router.get('/exportar/pdf/:file',($rq,$rs)=>{
 });
 
 // Remoto.
-
 $router.post('/remote/oauth',($rq,$rs)=>{
+    console.log($rq.body,$rq.body.user,$rq.body.pass);
     if($rq.session.status===true){
 
-        let log = $rq.session.user.nombre + ' ' + $rq.sesion.user.apellido;
+        let log = new String();
+            log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
             log = log + ' POST /models/model/tree/remote/oauth';
 
-        let user = new Object();
-            user.cuil = $rq.body.user;
-            user.cuil = user.cuil.match();
-            user.cuil = user.cuil.join('');
-            user.pass = $rq.body.pass;
-            user.pass = user.pass.match();
-            user.pass = user.pass.join();
+        let url = new String();
+            url = 'https://localhost:8000/boletines/auth';
+            //url = 'https://localhost/rest/ful/session.php/login';
 
-        let url = 'https://localhost/rest/ful/session.php/login';
+        let header = new Object();
+            header['Content-Type'] = 'application/json';
+
+        let body = new Object();
+            body.user = $rq.body.user;
+            body.user = body.user.match(/[a-z0-9-]/gi);
+            body.user = body.user.join('');
+            body.pass = $rq.body.pass;
+            body.pass = body.pass.match(/[a-z0-9]/gi);
+            body.pass = body.pass.join('');
+
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+            $ajax
+                .setMode('module')
+                .header(header)
+                .body(body)
+                .post(url,(json)=>{
+                    console.log(json);
+                });
+
+        /*let $request = $https.request({
+            host:'localhost',
+            port:'8000',
+            path:'/boletines/auth',
+            method:'POST'
+        },($response)=>{
+             
+            let $body = new Array();
+
+                $response.on('data',(data)=>$body.push(data));
+                $response.on('end',()=>{
+                    $body = $body.join('');
+                    console.log($body)
+                });
+
+        });
+        $request.end();
+
+        $request.on('error',($e)=>{console.log($e)});*/
+
+
+            
 
         /*let sql = "CALL electronjsDDSBoletines();";
         let conf = fs.readFileSync(__dirname+'/../conf/mysql.json','UTF-8');
