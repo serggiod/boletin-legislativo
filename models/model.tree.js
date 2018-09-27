@@ -972,73 +972,6 @@ $router.get('/exportar/word/:file',($rq,$rs)=>{
 
     } else $rs.sendStatus(404);
 });
-/*router.post('/exportar/web/:file',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let elements = rq.params.file.match(/[0-9\-\.]/g).join('').split('.');
-        let path  = 'item[';
-            path += elements[0];
-            path += ']';
-            path += '.item[';
-            path += elements[1];
-            path += ']';
-            db.select({
-                model:'boletin',
-                path:path,
-                callback:(bol,regs)=>{
-                    if(bol===true){
-                        let sql = "CALL electronjsDDSBoletinInsert("
-                            sql += "'"+regs.periodo+"',";
-                            sql += "'"+regs.sesion+"',";
-                            sql += "'"+regs.forma+"',";
-                            sql += "'"+regs.fecha+' '+regs.hora+"',";
-                            sql += "'"+regs.numero+"',";
-                            sql += "'"+regs.anio+"',";
-                            sql += "'"+regs.desde+"',";
-                            sql += "'"+regs.hasta+"',";
-                            sql += "'"+regs.observ+"',";
-                            sql += "'"+regs.text.replace('/','-')+"'";
-                            sql += ")";
-                        let conf = fs.readFileSync(__dirname+'/../conf/mysql.json','UTF-8');
-                            conf = JSON.parse(conf);
-                        let mysql = Mysql.createConnection(conf);
-                            mysql.connect((e)=>{
-                                if(e===null){
-                                    mysql.query(sql,(error,rows)=>{
-                                        if(error===null){
-                                            let json = JSON.parse(JSON.stringify(rows[0]))[0].json;
-                                            let pdf  = __dirname + '/model.tree.js.files/pdf/' + elements[2] + '.pdf';
-                                            let html = __dirname + '/model.tree.js.files/html/' + elements[2] + '.html';
-                                            let server  = fs.readFileSync(__dirname + '/../conf/ssh.json','UTF-8');
-                                                server  = JSON.parse(server);
-                                            let file =  server.username + ':';
-                                                file += server.password + '@';
-                                                file += server.host + ':';
-                                                file += server.port + ':';
-                                                file += '/var/www/html/img/mods/admindds/' + elements[2];
-                                                sshclient.scp(pdf,file+'.pdf',(e)=>{if(e===null){
-                                                    sshclient.scp(html,file+'.html',(e)=>{
-                                                        let user = rq.session.user;
-                                                        let text = user.apellido + ' ' + user.nombre + ' POST: /models/model/tree/exportar/web/' + file + '.';
-                                                        let pathg = '';
-                                                            if(e===null) pathg = __dirname + '/model.tree.js.logs/success.log';
-                                                            else pathg = __dirname + '/model.tree.js.logs/errors.log';
-                                                                log.set(pathg,text);
-                                                            if(e===null){
-                                                                mysql.end();
-                                                                sshclient.close();
-                                                                rs.send(json);
-                                                            } else $rs.send({result:false,rows:null});
-                                                    });
-                                                } else $rs.send({result:false,rows:null}); });
-                                        } else $rs.send({result:false,rows:null});
-                                    });
-                                } else $rs.send({result:false,rows:null});
-                            });
-                    } else $rs.status(404).send();
-                }
-            });
-    } else $rs.status(404).send();
-});*/
 //$router.post('/exportar/pdf/:file:ok
 $router.post('/exportar/pdf/:file',($rq,$rs)=>{
     if($rq.session.status===true){
@@ -1148,28 +1081,94 @@ $router.get('/exportar/pdf/:file',($rq,$rs)=>{
 });
 
 // Remoto.
-$router.post('/remote/oauth',($rq,$rs)=>{
-    console.log($rq.body,$rq.body.user,$rq.body.pass);
+// $router.post('/remote:
+$router.post('/remote',($rq,$rs)=>{
     if($rq.session.status===true){
 
         let log = new String();
             log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
-            log = log + ' POST /models/model/tree/remote/oauth';
+            log = log + ' POST /models/model/tree/remote';
 
         let url = new String();
-            url = 'https://localhost:8000/boletines/auth';
-            //url = 'https://localhost/rest/ful/session.php/login';
+            url = 'https://localhost:8000/';
 
         let header = new Object();
+            header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
+            header['Access-Control-Path']   = '/legislatura/jujuy/boletin/login';
+            header['Access-Control-User']   = $rq.body.user;
+            header['Access-Control-User']   = header['Access-Control-User'].match(/[a-z0-9-]{13}/gi);
+            header['Access-Control-User']   = header['Access-Control-User'].join('');
+            header['Access-Control-Pass']   = $rq.body.pass;
+            header['Access-Control-Pass']   = header['Access-Control-Pass'].match(/[a-z0-9]{32}/gi);
+            header['Access-Control-Pass']   = header['Access-Control-Pass'].join('');
             header['Content-Type'] = 'application/json';
 
-        let body = new Object();
-            body.user = $rq.body.user;
-            body.user = body.user.match(/[a-z0-9-]/gi);
-            body.user = body.user.join('');
-            body.pass = $rq.body.pass;
-            body.pass = body.pass.match(/[a-z0-9]/gi);
-            body.pass = body.pass.join('');
+        let body = new Object();            
+
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+            $rq.session.remoteLogin = false;
+            $rq.session.remoteUser  = null;
+            $rq.session.remotePass  = null;
+
+            $ajax
+                .setMode('module')
+                .header(header)
+                .body(body)
+                .post(url,(json)=>{
+                    if(json.result===true){
+                        $rq.session.remoteLogin = true;
+                        $rq.session.remoteUser  = header['Access-Control-User'];
+                        $rq.session.remotePass  = header['Access-Control-Pass'];
+
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+
+                        $rs.json(json)
+                    }
+                    else {
+                        $rq.session.remoteLogin = false;
+                        $rq.session.remoteUser  = null;
+                        $rq.session.remotePass  = null;
+
+                        $log
+                            .to('tree')
+                            .write(log,'errors');
+
+                        $rs.sendStatus(404);
+                    }
+                });
+
+    } else $rs.sendStatus(404);
+});
+//$router.delete('/remote:
+$router.delete('/remote',($rq,$rs)=>{
+    if($rq.session.status===true && $rw.session.remoteLogin===true){
+        $rq.session.remoteLogin = false;
+        $rq.session.remoteUser  = null;
+        $rq.session.remotePass  = null;
+        $rs.json({result:true,rows:false});
+    } else $rs.sendStatus(404);
+});
+
+//$router.get('/remote/files:
+$router.get('/remote/files',($rq,$rs)=>{
+    if($rq.session.status===true && $rq.session.remoteLogin===true){
+        let log = new String();
+            log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' GET /models/model/tree/remote';
+
+        let url = new String();
+            url = 'https://localhost:8000/';
+
+        let header = new Object();
+            header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
+            header['Access-Control-Path']   = '/legislatura/jujuy/boletin/files';
+            header['Access-Control-User']   = $rq.session.remoteUser;
+            header['Access-Control-Pass']   = $rq.session.remotePass;
+            header['Content-Type'] = 'application/json';
+
+        let body = new Object();            
 
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -1177,105 +1176,127 @@ $router.post('/remote/oauth',($rq,$rs)=>{
                 .setMode('module')
                 .header(header)
                 .body(body)
-                .post(url,(json)=>{
-                    console.log(json);
+                .get(url,(json)=>{
+                    if(json.result===true){
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+                        $rs.json(json)
+                    }
+                    else {
+                        $log
+                            .to('tree')
+                            .write(log,'errors');
+                        $rs.sendStatus(404);
+                    }
                 });
+        
+    } else $rq.sendStatus(404);
+});
+//$router.post('/remote/:file:
+$router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
+    if($rq.session.status===true && $rq.session.remoteLogin===true){
+        
+        let periodoid = new String();
+            periodoid = $rq.params.periodoid;
+            periodoid = periodoid.match(/[a-z0-9]/gi);
+            periodoid = periodoid.join('');
+        
+        let boletinid = new String();
+            boletinid = $rq.parmas.boletinid;
+            boletinid = boletinid.match(/[a-z0-9]/gi);
+            boletinid = boletinid.join('');
 
-        /*let $request = $https.request({
-            host:'localhost',
-            port:'8000',
-            path:'/boletines/auth',
-            method:'POST'
-        },($response)=>{
-             
-            let $body = new Array();
+        let log = new String();
+            log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' POST /models/model/tree/remote/' + periodoid + '/' + boletinid;
 
-                $response.on('data',(data)=>$body.push(data));
-                $response.on('end',()=>{
-                    $body = $body.join('');
-                    console.log($body)
-                });
-
-        });
-        $request.end();
-
-        $request.on('error',($e)=>{console.log($e)});*/
-
-
+        let createPDF = new Function();
+            createPDF = (pathh,pathp,callback) => {
+                $fs.readFile(pathh,{encoding:'utf8'},(error,html)=>{
+                    if(error===null){
+                        let config = new Object();
+                            config.format      = 'A4';
+                            config.orientation = 'portrait';
+                            config.border      = '15mm';
+                            html = html
+                                .replace(/size="4"/gm,'size="3"')
+                                .replace(/size="3"/gm,'size="2"')
+                                .replace(/size="2"/gm,'size="1"')
+                                .replace(/width="160px"/gm,'width="110px"')
+                                .replace(/width="70px"/gm,'width="25px"')
+                                .replace(/width="65px"/gm,'width="30px"');
             
+                            $htmlPdf
+                                .create(html,config)
+                                .toFile(pathp,(error)=>{
+                                    if(error===null) $fs.readFile(pathp,'utf8',(error,content)=>{
+                                        if(error===null) callback(content);
+                                        else callback(null);
+                                    });
+                                    else callback(null);
+                                });
+                    };
+                });
+            };
 
-        /*let sql = "CALL electronjsDDSBoletines();";
-        let conf = fs.readFileSync(__dirname+'/../conf/mysql.json','UTF-8');
-            conf = JSON.parse(conf);
-        let mysql = Mysql.createConnection(conf);
-            mysql.connect((e)=>{
-                if(e===null){
-                    mysql.query(sql,(e,r)=>{
-                        let user = rq.session.user;
-                        let text = user.apellido + ' ' + user.nombre + ' GET: /models/model/tree/remote/boletines.';
-                        let pathg = '';
-                            if(e) pathg = __dirname + '/model.tree.js.logs/success.log';
-                            else pathg = __dirname + '/model.tree.js.logs/errors.log';
+        let readPDF = new Function();
+            readPDF = (pathp,callback)=>{
+                $fs.readFile(pathp,'utf8',(error,content)=>{
+                    if(error===null) callback(content);
+                    else callback(null);
+                });
+            };
 
-                            log.set(pathg,text);
+        let sendToRemote = new Function();
+            sendToRemote = (boletin,content) => {
+                console.log(boletin,content);
+            };
 
-                            if(e===null){
-                                let json = JSON.parse(JSON.stringify(r[0]))[0].json;
-                                    json = JSON.parse(json);
-                                    if(json.result===true){
-                                        mysql.end();
-                                        rs.send(json);
-                                    } else $rs.send({result:false,rows:null});
-                            } else $rs.send({result:false,rows:null});
-                    });
-                } else $rs.send({result:false,rows:null});
-            });*/
+        let where = new Object();
+            where.id = periodoid;
+
+            $db
+                .select('ONE')
+                .from('boletin')
+                .where(where)
+                .done((result,rows)=>{
+                    
+                    if(result===true){
+
+                        for(i in rows[0].item){
+                            if(rows[0].item[i].id===boletinid){
+
+                                let boletin = rows[0].item[i];
+
+                                let pathh = boletin.file + '.html';
+                                    pathh = $path.join(__dirname,'/model.tree.js.files/html/',pathh);
+
+                                let pathp = boletin.file + '.pdf';
+                                    pathp = $path.join(__dirname,'/model.tree.js.files/pdf/',pathp);
+
+                                    if($fs.existsSync(pathp)===true) readPDF(pathp,(content)=>{
+                                        sendToRemote(boletin,content);
+                                    });
+                                    else createPDF(pathh,pathp,(content)=>{
+                                        sendToRemote(boletin,content);
+                                    });
+                            }
+                        }
+
+                    } else $rs.sendStatus(404);
+
+                });
+                
     } else $rs.sendStatus(404);
 });
-/*router.delete('/remote/boletin/:id/:fname',(rq,rs,n)=>{
-    if(rq.session.status===true){
-        let id = rq.params.id.match(/[0-9]/g).join('');
-        let fname = rq.params.fname.match(/[0-9\-]/g).join('');
-        let sql = "CALL electronjsDDSBoletinDelete(" + id + ");";
-        let conf = fs.readFileSync(__dirname+'/../conf/mysql.json','UTF-8');
-            conf = JSON.parse(conf);
-        let mysql = Mysql.createConnection(conf);
-            mysql.connect((e)=>{
-                if(e===null){
-                    mysql.query(sql,(e,r)=>{
-                        if(e===null){
-                            let json = JSON.parse(JSON.stringify(r[0]))[0].json;
-                                json = JSON.parse(json);
-                                if(json.result===true){
-                                    let server = fs.readFileSync(__dirname + '/../conf/ssh.json','UTF-8');
-                                        server = JSON.parse(server);
-                                    let cmd = 'rm /var/www/html/img/mods/admindds/' + fname + '.*';
-                                    let callback = (e,sout,serr)=>{
-                                        let user = rq.session.user;
-                                        let text = user.apellido + ' ' + user.nombre + ' DELETE: /models/model/tree/remote/boletin/' + id + '/' + fname + '.';
-                                        let pathg = '';
+//$router.delete('/remote/:file:
+$router.delete('/remote/:file',($rq,$rs)=>{
+    if($rq.session.status===true && $rq.session.remoteLogin===true){
 
-                                            if(e) pathg = __dirname + '/model.tree.js.logs/success.log';
-                                            else pathg = __dirname + '/model.tree.js.logs/errors.log';
+    } else $rs.sendStatus(404);
+});
 
-                                            log.set(pathg,text);
-
-                                            if(e===undefined){
-                                                mysql.end();
-                                                sshexec({cmd:'exit'},()=>{});
-                                                rs.send(json);
-                                            }
-                                        };
-                                        sshconn(server,(e,ssh)=>{
-                                            if(e===null) sshexec({cmd:cmd,ssh:ssh},callback);
-                                        });
-                                } else $rs.send({result:false,rows:null});
-                        } else $rs.send({result:false,rows:null});
-                    });
-                } else $rs.send({result:false,rows:null});
-            });
-    } else $rs.status(404).send();
-});*/
 
 
 // Autoridades.
