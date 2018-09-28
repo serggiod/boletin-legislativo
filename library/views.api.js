@@ -124,7 +124,7 @@ var viewsApi = {
         formUsuarios.openDevTools();    
     },
     //formBoletinesOnline:ok
-    formBoletinesOnline : (periodoid,boletinid) => {
+    formBoletinesOnline : (periodoid,boletinid,boletinfile) => {
         let icon = $path.join(__dirname,'/../assets/');
             if(process.platform==='win32')  icon += 'icon.ico';
             if(process.platform==='linux')  icon += 'icon.png';
@@ -147,7 +147,7 @@ var viewsApi = {
                 devTools:true
             }
         });
-        formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html?periodoid=' + periodoid + '&boletinid=' + boletinid);
+        formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html?periodoid=' + periodoid + '&boletinid=' + boletinid + '&boletinfile=' + boletinfile);
         formBoletines.setMenu(null);
         formBoletines.center();
         formBoletines.openDevTools();
@@ -1140,8 +1140,9 @@ var viewsApi = {
     //exportarAWEB:ok
     exportarAWEB : () => {
         let id = tree.getSelectedItemId();
+        let name = tree.getSelectedItemText().replace('/','-');
         let parent = tree.getParentId(id);
-        if(parent!=0) viewsApi.formBoletinesOnline(parent,id);
+        if(parent!=0) viewsApi.formBoletinesOnline(parent,id,name);
     }
 };
 module.exports = viewsApi;

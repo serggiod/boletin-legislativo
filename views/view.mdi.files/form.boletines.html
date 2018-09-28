@@ -48,20 +48,23 @@
                     let params = url.searchParams;
                     let periodoid = params.get('periodoid');
                     let boletinid = params.get('boletinid');
-                        console.log(periodoid,boletinid);
+                    let boletinfile = params.get('boletinfile');
 
                     let layout = new dhtmlXLayoutObject(document.body,'1C');
                         layout.cells('a').setText('Boletines publicados en la Página Web');
                         layout.progressOn();
 
+                    let buttons = new Array();
+                        if(!(boletinfile==='undefined')) buttons.push({id:'insertar',type:'button',text:'Publicar: ' + boletinfile, img:'/icons/add.png',imgdis:'/icons/add.png'});
+                        buttons.push({id:'eliminar',type:'button',text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'});
+                        buttons.push({id:'cerrar',type:'button',text:'Cerrar',  img:'/icons/cancel.png', imgdis:'/icons/cancel.png'});
+
                     let toolbar = layout.cells('a').attachToolbar();
-                        toolbar.loadStruct([
-                            {id:'eliminar',  type:'button', text:'Eliminar',  img:'/icons/user_delete.png', imgdis:'/icons/user_delete.png'}
-                        ]);
+                        toolbar.loadStruct(buttons);
                         toolbar.attachEvent('onClick',(button)=>{
-                            if(button=='eliminar'){
-                                alert('Eliminar este boletin de la pagina web.');
-                            }
+                            if(button==='eliminar') remoteFileDelete();
+                            if(button==='insertar') remoteFileSend();
+                            if(button==='cerrar') $electron.remote.getCurrentWindow().close();
                         });
 
                     let grid = layout.cells('a').attachGrid();
@@ -96,11 +99,9 @@
                                     pass = pass.match(/[a-z0-9]{4,20}/gi);
                                     pass = pass.join('');
                                     pass = $md5(pass);
-
                                     sessionStorage.setItem('remote-login',false);
                                     sessionStorage.setItem('remote-user',user);
                                     sessionStorage.setItem('remote-pass',pass);
-
                                     remoteLogin();
                             }
 
@@ -108,7 +109,6 @@
                                 sessionStorage.setItem('remote-login',false);
                                 sessionStorage.setItem('remote-user',null);
                                 sessionStorage.setItem('remote-pass',null);
-
                                 $electron.remote.getCurrentWindow().close();
                             }
 
@@ -141,6 +141,7 @@
                                 body.user = sessionStorage.getItem('remote-user');
                                 body.pass = sessionStorage.getItem('remote-pass');
 
+                                window.window('window').progressOn();
                                 $ajax
                                     .header(header)
                                     .body(body)
@@ -150,7 +151,6 @@
                                             sessionStorage.setItem('remote-login',true);
                                             window.window('window').close();
                                             grid.load('/models/model/tree/remote/files','json');
-                                            remoteFileSend();
                                             layout.progressOff();
                                         }
 
@@ -159,63 +159,97 @@
                                             text:'El usuario no se pudo autenticar.',
                                             ok:'Aceptar'
                                         });
+
+                                        window.window('window').progressOff();
+
                                     });
                         };
 
                     let remoteLogout = ()=>{
-                            if(sessionStorage.getItem('remote-login')===true){
-                                let url = new String();
-                                    url = '/models/model/tree/remote';
+                            let login = eval(sessionStorage.getItem('remote-login'));
+                                if(login===true){
+                                    let url = new String();
+                                        url = '/models/model/tree/remote';
 
-                                let header = new Object();
-                                    header['Content-Type'] = 'application/json';
+                                    let header = new Object();
+                                        header['Content-Type'] = 'application/json';
 
-                                let body = new Object();
+                                    let body = new Object();
 
-                                    $ajax
-                                        .header(header)
-                                        .body(body)
-                                        .delete(url,(json)=>{
-                                            if(json.result===true){
-                                                sessionStorage.setItem('remote-login',false);
-                                                sessionStorage.setItem('remote-user',null);
-                                                sessionStorage.setItem('remote-pass',null);
-                                                return true;
-                                            } else false;
-                                        });
+                                        $ajax
+                                            .header(header)
+                                            .body(body)
+                                            .delete(url,(json)=>{
+                                                if(json.result===true){
+                                                    sessionStorage.setItem('remote-login',false);
+                                                    sessionStorage.setItem('remote-user',null);
+                                                    sessionStorage.setItem('remote-pass',null);
+                                                    return true;
+                                                } else false;
+                                            });
 
-                            } return false;
+                                } return false;
                         };
 
                     let remoteFileSend = () => {
-                            if(sessionStorage.getItem('remote-login')===true) {
 
-                                let url = new String();
-                                    url = '/models/model/tree/remote/' + periodoid + '/' + boletinid;
+                            let login = eval(sessionStorage.getItem('remote-login'));
+                                if(login===true){
+                                    let url = new String();
+                                        url = '/models/model/tree/remote/' + periodoid + '/' + boletinid;
 
-                                let header = new Object();
-                                    header['Content-Type'] = 'application/json';
+                                    let header = new Object();
+                                        header['Content-Type'] = 'application/json';
 
-                                let body = new Object();
+                                    let body = new Object();
 
-                                    layout.cells('a').progressOn();
-                                    $ajax
-                                        .header(header)
-                                        .body(body)
-                                        .post(url,(json)=>{
-                                            if(json.result===true) grid.load('/models/model/tree/remote/files','json');
-                                            else dhmtlx.alert({title:'Error',text:'No se pudo publicar el boletín',type:'alert-error'});
-                                            layout.cells('a').progressOff();
-                                        });
-                            
-                            }
-                            
+                                        layout.cells('a').progressOn();
+                                        $ajax
+                                            .header(header)
+                                            .body(body)
+                                            .post(url,(json)=>{
+                                                if(json.result===true){
+                                                    toolbar.hideItem('insertar');
+                                                    grid.load('/models/model/tree/remote/files','json');
+                                                } else dhmtlx.alert({title:'Error',text:'No se pudo publicar el boletín',type:'alert-error'});
+                                                layout.cells('a').progressOff();
+                                            });
+                                }
+                                                        
                         };
 
                     let remoteFileDelete = () => {
-                            if(sessionStorage.getItem('remote-login')===true){
+                            let login = eval(sessionStorage.getItem('remote-login'));
+                                if(login===true){
+                                    if(confirm('¿Esta seguro que desea eliminar este boletin?')){
 
-                            }
+                                        let rowId = new String();
+                                            rowId = grid.getSelectedRowId();
+
+                                        let url = new String();
+                                            url = '/models/model/tree/remote/'+rowId;
+
+                                        let header = new Object();
+                                            header['Content-Type'] = 'application/json';
+
+                                        let body = new Object();
+
+                                            layout.cells('a').progressOn();
+                                            $ajax
+                                                .header(header)
+                                                .body(body)
+                                                .delete(url,(json)=>{
+                                                    if(json.result===true) grid.load('/models/model/tree/remote/files','json');
+                                                    else dhtmlx.alert({
+                                                        type:'alert-error',
+                                                        title:'ERROR',
+                                                        text:'No se pudo eliminar el boletín.',
+                                                        ok:'Aceptar'
+                                                    });
+                                                    layout.cells('a').progressOff();
+                                                });
+                                    }
+                                }
                         };
 
                 };

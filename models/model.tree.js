@@ -8,16 +8,13 @@ var $express  = require('express');
 var $router   = $express.Router();
 var $htmlPdf  = require('html-pdf');
 var $HtmlDocx = require('html-docx-js');
-var $https    = require('https');
-//var $request  = require('request');
-//var $sshconn   = require('ssh2-connect');
-//var $sshexec   = require('ssh2-exec');
-//var $sshclient = require('scp2');
+
 
 // $router.all('/':ok
 $router.all('/',($rq,$rs)=>{
     $rs.sendStatus(404);
 });
+
 
 // Tree content.
 // $router.get('/init':ok
@@ -80,6 +77,7 @@ $router.get('/init',(rq,$rs) => {
 
     } else $rs.sendStatus(404);
 });
+
 
 // Periodos.
 // $router.post('/periodo':ok
@@ -242,6 +240,7 @@ $router.delete('/periodo/:id',(rq,$rs) => {
                 });
     } else $rs.sendStatus(404).end();
 });
+
 
 // Boletines.
 // $router.post('/boletin/:periodoid':ok
@@ -873,6 +872,7 @@ $router.delete('/tarea/:periodoid/:boletinid/:index',($rq,$rs) => {
     } else $rs.sendStatus(404);
 });
 
+
 // Exportar.
 // $router.post('/exportar/word/:file:ok
 $router.post('/exportar/word/:file',($rq,$rs)=>{
@@ -1080,8 +1080,9 @@ $router.get('/exportar/pdf/:file',($rq,$rs)=>{
     } else $rs.sendStatus(404);
 });
 
+
 // Remoto.
-// $router.post('/remote:
+// $router.post('/remote:ok
 $router.post('/remote',($rq,$rs)=>{
     if($rq.session.status===true){
 
@@ -1141,7 +1142,7 @@ $router.post('/remote',($rq,$rs)=>{
 
     } else $rs.sendStatus(404);
 });
-//$router.delete('/remote:
+//$router.delete('/remote:ok
 $router.delete('/remote',($rq,$rs)=>{
     if($rq.session.status===true && $rw.session.remoteLogin===true){
         $rq.session.remoteLogin = false;
@@ -1150,8 +1151,7 @@ $router.delete('/remote',($rq,$rs)=>{
         $rs.json({result:true,rows:false});
     } else $rs.sendStatus(404);
 });
-
-//$router.get('/remote/files:
+//$router.get('/remote/files:ok
 $router.get('/remote/files',($rq,$rs)=>{
     if($rq.session.status===true && $rq.session.remoteLogin===true){
         let log = new String();
@@ -1193,7 +1193,7 @@ $router.get('/remote/files',($rq,$rs)=>{
         
     } else $rq.sendStatus(404);
 });
-//$router.post('/remote/:file:
+//$router.post('/remote/:periodoid/:boletinid:ok
 $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
     if($rq.session.status===true && $rq.session.remoteLogin===true){
         
@@ -1203,7 +1203,7 @@ $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
             periodoid = periodoid.join('');
         
         let boletinid = new String();
-            boletinid = $rq.parmas.boletinid;
+            boletinid = $rq.params.boletinid;
             boletinid = boletinid.match(/[a-z0-9]/gi);
             boletinid = boletinid.join('');
 
@@ -1211,46 +1211,55 @@ $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
             log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
             log = log + ' POST /models/model/tree/remote/' + periodoid + '/' + boletinid;
 
-        let createPDF = new Function();
-            createPDF = (pathh,pathp,callback) => {
-                $fs.readFile(pathh,{encoding:'utf8'},(error,html)=>{
-                    if(error===null){
-                        let config = new Object();
-                            config.format      = 'A4';
-                            config.orientation = 'portrait';
-                            config.border      = '15mm';
-                            html = html
-                                .replace(/size="4"/gm,'size="3"')
-                                .replace(/size="3"/gm,'size="2"')
-                                .replace(/size="2"/gm,'size="1"')
-                                .replace(/width="160px"/gm,'width="110px"')
-                                .replace(/width="70px"/gm,'width="25px"')
-                                .replace(/width="65px"/gm,'width="30px"');
-            
-                            $htmlPdf
-                                .create(html,config)
-                                .toFile(pathp,(error)=>{
-                                    if(error===null) $fs.readFile(pathp,'utf8',(error,content)=>{
-                                        if(error===null) callback(content);
-                                        else callback(null);
-                                    });
-                                    else callback(null);
-                                });
-                    };
-                });
-            };
-
-        let readPDF = new Function();
-            readPDF = (pathp,callback)=>{
-                $fs.readFile(pathp,'utf8',(error,content)=>{
-                    if(error===null) callback(content);
-                    else callback(null);
-                });
+        let processBoletin = new Function();
+            processBoletin = (boletin)=>{
+                boletin.file = boletin.text.replace('/','-');
+                let path = boletin.file + '.html';
+                    path = $path.join(__dirname,'/model.tree.js.files/html/',path);
+                    $fs.readFile(path,'base64',(error,html)=>{
+                        if(error===null){
+                            boletin.html = html;
+                            sendToRemote(boletin);
+                        } else $rs.sendStatus(404);
+                    });
             };
 
         let sendToRemote = new Function();
-            sendToRemote = (boletin,content) => {
-                console.log(boletin,content);
+            sendToRemote = (boletin) => {
+                let url = new String();
+                    url = 'https://localhost:8000/';
+        
+                let header = new Object();
+                    header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
+                    header['Access-Control-Path']   = '/legislatura/jujuy/boletin/insert';
+                    header['Access-Control-User']   = $rq.session.remoteUser;
+                    header['Access-Control-Pass']   = $rq.session.remotePass;
+                    header['Content-Type'] = 'application/json';
+        
+                let body = new Object();
+                    body = boletin; 
+        
+                    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        
+                    $ajax
+                        .setMode('module')
+                        .header(header)
+                        .body(body)
+                        .post(url,(json)=>{
+                            if(json.result===true){
+                                $log
+                                    .to('tree')
+                                    .write(log,'success');
+                                $rs.json(json);
+                            }
+                            else {
+                                $log
+                                    .to('tree')
+                                    .write(log,'errors');
+                                $rs.sendStatus(404);
+                            }
+                        });                
+
             };
 
         let where = new Object();
@@ -1261,42 +1270,69 @@ $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
                 .from('boletin')
                 .where(where)
                 .done((result,rows)=>{
-                    
-                    if(result===true){
 
+                    if(result===true){
                         for(i in rows[0].item){
                             if(rows[0].item[i].id===boletinid){
-
-                                let boletin = rows[0].item[i];
-
-                                let pathh = boletin.file + '.html';
-                                    pathh = $path.join(__dirname,'/model.tree.js.files/html/',pathh);
-
-                                let pathp = boletin.file + '.pdf';
-                                    pathp = $path.join(__dirname,'/model.tree.js.files/pdf/',pathp);
-
-                                    if($fs.existsSync(pathp)===true) readPDF(pathp,(content)=>{
-                                        sendToRemote(boletin,content);
-                                    });
-                                    else createPDF(pathh,pathp,(content)=>{
-                                        sendToRemote(boletin,content);
-                                    });
+                                processBoletin(rows[0].item[i]);
+                                break;
                             }
                         }
-
                     } else $rs.sendStatus(404);
 
                 });
                 
     } else $rs.sendStatus(404);
 });
-//$router.delete('/remote/:file:
-$router.delete('/remote/:file',($rq,$rs)=>{
+//$router.delete('/remote/:file:ok
+$router.delete('/remote/:id',($rq,$rs)=>{
     if($rq.session.status===true && $rq.session.remoteLogin===true){
+
+        let id = new String();
+            id = $rq.params.id;
+            id = id.match(/[0-9]/gi);
+            id = id.join('');
+
+        let log = new String();
+            log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
+            log = log + ' DELETE /models/model/tree/remote/' + id;
+
+        let url = new String();
+            url = 'https://localhost:8000/';
+
+        let header = new Object();
+            header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
+            header['Access-Control-Path']   = '/legislatura/jujuy/boletin/delete';
+            header['Access-Control-User']   = $rq.session.remoteUser;
+            header['Access-Control-Pass']   = $rq.session.remotePass;
+            header['Content-Type'] = 'application/json';
+
+        let body = new Object();
+            body.id = id;
+
+            process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+            $ajax
+                .setMode('module')
+                .header(header)
+                .body(body)
+                .delete(url,(json)=>{
+                    if(json.result===true){
+                        $log
+                            .to('tree')
+                            .write(log,'success');
+                        $rs.json(json);
+                    }
+                    else {
+                        $log
+                            .to('tree')
+                            .write(log,'errors');
+                        $rs.sendStatus(404);
+                    }
+                }); 
 
     } else $rs.sendStatus(404);
 });
-
 
 
 // Autoridades.
@@ -1382,6 +1418,7 @@ $router.put('/autoridades',($rq,$rs)=>{
             })
     } else $rs.sendStatus(404);
 });
+
 
 // Super respaldo.
 // $router.get('/super/respaldo/load':ok
@@ -1523,6 +1560,7 @@ $router.delete('/super/respaldo/delete/:dname',(rq,$rs)=>{
     }
 });
 
+
 // Super descargas.
 // $router.get('/super/descargas/load':ok
 $router.get('/super/descargas/load',(rq,$rs)=>{
@@ -1639,6 +1677,7 @@ $router.delete('/super/descargas/delete/:dname',(rq,$rs)=>{
 
 });
 
+
 // Super Logs Auth.
 // $router.get('/super/logauth/success/load':ok
 $router.get('/super/logauth/success/load',(rq,$rs)=>{
@@ -1723,6 +1762,7 @@ $router.get('/super/logauth/errors/load',(rq,$rs)=>{
 
 });
 
+
 // Super Logs Tree.
 // $router.get('/super/logtree/success/load':ok
 $router.get('/super/logtree/success/load',(rq,$rs)=>{
@@ -1806,6 +1846,7 @@ $router.get('/super/logtree/errors/load',(rq,$rs)=>{
     } else $rs.sendStatus(404).end();
 
 });
+
 
 // Super Logs User.
 //$router.get('/super/loguser/success/load':ok
