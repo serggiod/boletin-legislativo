@@ -53,7 +53,7 @@ var modelApi = new Object();
     modelApi.set = (set)=>{
         if(typeof(set)==='object'){
             set = JSON.stringify(set);
-            set = set.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\°\º\º\:\"\.\,\{\}\[\]\(\)\/\ ]/gi);
+            set = set.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\°\º\º\:\"\.\,\{\}\[\]\(\)\/\-\ ]/gi);
             set = set.join('');
             set = JSON.parse(set);
         }
@@ -63,7 +63,7 @@ var modelApi = new Object();
     modelApi.values = (values)=>{
         if(typeof(values)==='object'){
             values = JSON.stringify(values);
-            values = values.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\°\º\º\:\"\.\,\{\}\[\]\(\)\/\ ]/gi);
+            values = values.match(/[a-z0-9áéíóúÁÉÍÓÚñÑ\°\º\º\:\"\.\,\{\}\[\]\(\)\/\-\ ]/gi);
             values = values.join('');
             values = JSON.parse(values);
         } else values = null;
