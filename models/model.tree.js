@@ -1079,7 +1079,7 @@ $router.get('/exportar/pdf/:file',($rq,$rs)=>{
             });
     } else $rs.sendStatus(404);
 });
-
+ 
 
 // Remoto.
 // $router.post('/remote:ok
@@ -1144,7 +1144,7 @@ $router.post('/remote',($rq,$rs)=>{
 });
 //$router.delete('/remote:ok
 $router.delete('/remote',($rq,$rs)=>{
-    if($rq.session.status===true && $rw.session.remoteLogin===true){
+    if($rq.session.status===true && $rq.session.remoteLogin===true){
         $rq.session.remoteLogin = false;
         $rq.session.remoteUser  = null;
         $rq.session.remotePass  = null;
