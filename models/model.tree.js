@@ -1285,13 +1285,21 @@ $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
     } else $rs.sendStatus(404);
 });
 //$router.delete('/remote/:file:ok
-$router.delete('/remote/:id',($rq,$rs)=>{
+$router.delete('/remote/:id/:file',($rq,$rs)=>{
     if($rq.session.status===true && $rq.session.remoteLogin===true){
 
         let id = new String();
             id = $rq.params.id;
             id = id.match(/[0-9]/gi);
             id = id.join('');
+
+        let file = new String();
+            file = $rq
+                .params
+                .bol
+                .match(/[0-9\-]/gi)
+                .join('');
+            
 
         let log = new String();
             log = $rq.session.user.nombre + ' ' + $rq.session.user.apellido;
@@ -1301,10 +1309,12 @@ $router.delete('/remote/:id',($rq,$rs)=>{
             url = 'https://localhost:8000/';
 
         let header = new Object();
-            header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
-            header['Access-Control-Path']   = '/legislatura/jujuy/boletin/delete';
-            header['Access-Control-User']   = $rq.session.remoteUser;
-            header['Access-Control-Pass']   = $rq.session.remotePass;
+            header['Access-Control-Pragma']     = '/legislatura/jujuy/boletin';
+            header['Access-Control-Path']       = '/legislatura/jujuy/boletin/delete';
+            header['Access-Control-Param-Id']   = id;
+            header['Access-Control-Param-File'] = file;
+            header['Access-Control-User']       = $rq.session.remoteUser;
+            header['Access-Control-Pass']       = $rq.session.remotePass;
             header['Content-Type'] = 'application/json';
 
         let body = new Object();
