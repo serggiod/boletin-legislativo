@@ -228,7 +228,7 @@
                                             .post(url,(json)=>{
                                                 if(json.result===true){
                                                     toolbar.hideItem('insertar');
-                                                    grid.load('/models/model/tree/remote/files','json');
+                                                    grid.clearAndLoad('/models/model/tree/remote/files','json');
                                                 } else dhmtlx.alert({title:'Error',text:'No se pudo publicar el boletín',type:'alert-error'});
                                                 layout.cells('a').progressOff();
                                             });
@@ -260,7 +260,7 @@
                                                     .header(header)
                                                     .body(body)
                                                     .delete(url,(json)=>{
-                                                        if(json.result===true) grid.load('/models/model/tree/remote/files','json');
+                                                        if(json.result===true) grid.clearAndLoad('/models/model/tree/remote/files','json');
                                                         else dhtmlx.alert({
                                                             type:'alert-error',
                                                             title:'ERROR',

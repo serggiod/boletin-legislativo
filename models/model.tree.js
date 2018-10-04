@@ -1296,7 +1296,7 @@ $router.delete('/remote/:id/:file',($rq,$rs)=>{
         let file = new String();
             file = $rq
                 .params
-                .bol
+                .file
                 .match(/[0-9\-]/gi)
                 .join('');
             
