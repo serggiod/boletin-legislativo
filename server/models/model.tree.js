@@ -8,11 +8,14 @@ var $express  = require('express');
 var $router   = $express.Router();
 var $htmlPdf  = require('html-pdf');
 var $HtmlDocx = require('html-docx-js');
+var $config   = $path.join(__dirname,'/../conf/server.json');
+    $config   = $fs.readFileSync($config,'utf8');
+    $config   = JSON.parse($config);
 
 
 // $router.all('/':ok
 $router.all('/',($rq,$rs)=>{
-    $rs.sendStatus(404);
+    $rs.sendStatus(404).end();
 });
 
 
@@ -1091,7 +1094,12 @@ $router.post('/remote',($rq,$rs)=>{
             log = log + ' POST /models/model/tree/remote';
 
         let url = new String();
-            url = 'https://localhost:8000/';
+            url = $config.resources.remote.proto
+            url += '://'
+            url += $config.resources.remote.host
+            url += ':'
+            url += $config.resources.remote.port
+            url += '/';
 
         let header = new Object();
             header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
@@ -1159,7 +1167,12 @@ $router.get('/remote/files',($rq,$rs)=>{
             log = log + ' GET /models/model/tree/remote';
 
         let url = new String();
-            url = 'https://localhost:8000/';
+            url = $config.resources.remote.proto
+            url += '://'
+            url += $config.resources.remote.host
+            url += ':'
+            url += $config.resources.remote.port
+            url += '/';
 
         let header = new Object();
             header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
@@ -1227,7 +1240,12 @@ $router.post('/remote/:periodoid/:boletinid',($rq,$rs)=>{
         let sendToRemote = new Function();
             sendToRemote = (boletin) => {
                 let url = new String();
-                    url = 'https://localhost:8000/';
+                    url = $config.resources.remote.proto
+                    url += '://'
+                    url += $config.resources.remote.host
+                    url += ':'
+                    url += $config.resources.remote.port
+                    url += '/';
         
                 let header = new Object();
                     header['Access-Control-Pragma'] = '/legislatura/jujuy/boletin';
@@ -1306,7 +1324,12 @@ $router.delete('/remote/:id/:file',($rq,$rs)=>{
             log = log + ' DELETE /models/model/tree/remote/' + id;
 
         let url = new String();
-            url = 'https://localhost:8000/';
+            url = $config.resources.remote.proto
+            url += '://'
+            url += $config.resources.remote.host
+            url += ':'
+            url += $config.resources.remote.port
+            url += '/';
 
         let header = new Object();
             header['Access-Control-Pragma']     = '/legislatura/jujuy/boletin';

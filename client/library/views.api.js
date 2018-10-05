@@ -1,10 +1,9 @@
-var $fs      = require('fs');
-var $path    = require('path');
-var $mode     = $path.join(__dirname,'/../conf/mode.json');
-    $mode     = $fs.readFileSync($mode,{encoding:'utf8'});
-    $mode     = JSON.parse($mode);
-var $config   = $mode.config.server;
-var $host     = $config.proto + '://' + $config.ip + ':' + $config.port + '/';
+var $fs     = require('fs');
+var $path   = require('path');
+var $config = $path.join(__dirname,'/../conf/client.json');
+    $config = $fs.readFileSync($config,'utf8');
+    $config = JSON.parse($config);
+var $host   = $config.server.proto + '://' + $config.server.host + ':' + $config.server.port + '/';
 var viewsApi = {
     
     //formPassword:ok
@@ -144,7 +143,7 @@ var viewsApi = {
                 webSecurity:false,
                 allowRunningInsecureContent : true,
                 allowDisplayingInsecureContent:true,
-                devTools:true
+                devTools:false
             }
         });
         formBoletines.loadURL($host + '/view.mdi.files/form.boletines.html?periodoid=' + periodoid + '&boletinid=' + boletinid + '&boletinfile=' + boletinfile);

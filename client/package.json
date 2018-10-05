@@ -13,31 +13,10 @@
     "pack-linux32-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=linux --arch=ia32 --executable-name=client --icon=./assets/icon.png --overwrite=true --prune --download --asar",
     "pack-linux32-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=linux --arch=ia32 --executable-name=server --icon=./assets/icon.png --overwrite=true --prune --download",
     "pack-linux64-client": "electron-packager ./  client --electron-version=1.8.7 --out=./ --platform=linux --arch=x64  --executable-name=client --icon=./assets/icon.png --overwrite=true --prune --download --asar",
-    "pack-linux64-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=linux --arch=x64  --executable-name=server --icon=./assets/icon.png --overwrite=true --prune --download",
-    "gulp-build-server": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js build-in-tmp --mode=server",
-    "gulp-build-client": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js build-in-tmp --mode=client",
-    "gulp-clean": "./node_modules/gulp/bin/gulp.js --gulpfile=./gulpfile.js clean-dir-tmp",
-    "gulp-rebuild": " .\\node_modules\\gulp\\bin\\gulp.js --gulpfile=.\\gulpfile.js rebuild"
+    "pack-linux64-server": "electron-packager ./  server --electron-version=1.8.7 --out=./ --platform=linux --arch=x64  --executable-name=server --icon=./assets/icon.png --overwrite=true --prune --download"
   },
   "dependencies": {
-    "arg": "^2.0.0",
-    "body-parser": "^1.18.3",
-    "express": "^4.16.3",
-    "express-session": "^1.15.6",
-    "form-data": "^2.3.2",
-    "gulp": "^4.0.0",
-    "gulp-exec": "^3.0.2",
-    "gulp-replace": "^1.0.0",
-    "html-docx-js": "^0.3.1",
-    "html-pdf": "^2.2.0",
-    "js-md5": "^0.7.3",
-    "jshint": "^2.9.6",
-    "mysql": "^2.16.0",
-    "node-rest-client": "^3.1.0",
-    "node-rest-client-promise": "^3.1.1",
-    "uniqid": "^5.0.3",
-    "xmlhttprequest": "^1.8.0",
-    "zip-dir": "^1.0.2"
+    "js-md5": "^0.7.3"
   },
   "devDependencies": {
     "electron": "^2.0.7",

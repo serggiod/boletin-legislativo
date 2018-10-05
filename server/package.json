@@ -1,0 +1,23 @@
+{
+  "name": "direccion-diario-sesiones-server",
+  "productName": "LEGISLATURA DE JUJUY / Boletín Legislativo / Server",
+  "version": "0.0.1",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "nodejs ./"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "form-data": "^2.3.2",
+    "html-docx-js": "^0.3.1",
+    "html-pdf": "^2.2.0",
+    "js-md5": "^0.7.3",
+    "uniqid": "^5.0.3",
+    "xmlhttprequest": "^1.8.0",
+    "zip-dir": "^1.0.2"
+  },
+  "devDependencies": {}
+}

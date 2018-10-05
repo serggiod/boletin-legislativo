@@ -5,14 +5,15 @@ var $express = require('express');
 var $router  = $express.Router();
 
 $router.all('/',(rq,rs,n)=>{
-    rs.sendStatus(404);
+    rs.sendStatus(404).end();
 });
 
 $router.get('/select',(rq,rs,n)=>{
 
     let callback = (result,usuarios)=>{
             
-            let user = rq.session.user;
+            let log = rq.session.user.nombre + ' ' + rq.session.user.apellido;
+                log += ' GET: /models/model/usuarios/select.';
 
                 if(result===true){
 
@@ -33,7 +34,7 @@ $router.get('/select',(rq,rs,n)=>{
 
                     $log
                         .to('auth')
-                        .write(user.apellido + ' ' + user.nombre + ' GET: /models/model/usuarios/select.','success');
+                        .write(log,'success');
 
                     rs
                         .type('json')
@@ -46,7 +47,7 @@ $router.get('/select',(rq,rs,n)=>{
 
                     $log
                         .to('auth')
-                        .write(user.apellido + ' ' + user.nombre + ' GET: /models/model/usuarios/select.','errors');
+                        .write(log,'errors');
 
                     rs
                         .sendStatus(404)
@@ -155,39 +156,6 @@ $router.put('/update/:id',(rq,rs,n)=>{
 
             })
 
-    /*let regi  = new RegExp('[0-9]','gi');
-    let rege  = new RegExp('[A-Z0-9 ]{2,30}','gi');
-    let regu  = new RegExp('[A-Z0-9]{6,10}','gi');
-    let index = rq.params.index.match(regi).join('');
-    let json = JSON.parse(rq.body);
-        db.select({
-            model    : 'usuarios',
-            path     : 'usuarios[' + index +']',
-            callback : (bol,usuario) => {
-                if(json.nombre.length>=1)   usuario.nombre   = json.nombre.match(rege).join('');
-                if(json.apellido.length>=1) usuario.apellido = json.apellido.match(rege).join('');
-                if(json.usuario.length>=1)  usuario.usuario  = json.usuario.match(regu).join('');
-                if(json.tipo.length>=1) usuario.tipo = json.tipo.match(rege).join('');
-                if(json.password.length>=1) usuario.password = json.password.match(rege).join('');
-                db.update({
-                    model    : 'usuarios',
-                    path     : 'usuarios[' + index + ']',
-                    value    : usuario,
-                    callback : (bol,regs) => {
-                        let user = rq.session.user;
-                        let text = user.apellido + ' ' + user.nombre + ' PUT: /models/model/usuarios/update/' + index + '.';
-                        let path = '';
-
-                            if(bol) path = __dirname + '/model.usuario.js.logs/success.log';
-                            else path = __dirname + '/model.usuario.js.logs/errors.log';
-
-                            log.set(path,text);
-
-                            rs.send({result:bol,rows:regs});
-                    }
-                });
-            }
-        });*/
 });
 
 $router.delete('/delete/:id',(rq,rs,n)=>{

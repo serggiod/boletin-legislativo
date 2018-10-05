@@ -1,45 +1,77 @@
 build
 build/*
 
-confF
-confF/*
-
-database/backup/*
-database/backupzip/*
+server/database/backup/*
+server/database/backupzip/*
 
 dist
 dist/*
 
-library/dhtmlx/material
-library/dhtmlx/material/*
+server/library/dhtmlx/material
+server/library/dhtmlx/material/*
 
-library/dhtmlx/skyblue
-library/dhtmlx/skyblue/*
+server/library/dhtmlx/skyblue
+server/library/dhtmlx/skyblue/*
 
-library/dhtmlx/terrace
-library/dhtmlx/terrace/*
+server/library/dhtmlx/terrace
+server/library/dhtmlx/terrace/*
 
-library/dhtmlx/web
-library/dhtmlx/web/*
+server/library/dhtmlx/web
+server/library/dhtmlx/web/*
 
-models/model.auth.js.logs/*
-models/model.tree.js.files/html/*
-models/model.tree.js.files/pdf/*
-models/model.tree.js.files/word/*
-models/model.tree.js.logs/*
-models/model.usuarios.logs/*
+server/library/dhtmlx/material
+server/library/dhtmlx/material/*
+
+server/library/dhtmlx/skyblue
+server/library/dhtmlx/skyblue/*
+
+server/library/dhtmlx/terrace
+server/library/dhtmlx/terrace/*
+
+server/library/dhtmlx/web
+server/library/dhtmlx/web/*
+
+client/library/dhtmlx/material
+client/library/dhtmlx/material/*
+
+client/library/dhtmlx/skyblue
+client/library/dhtmlx/skyblue/*
+
+client/library/dhtmlx/terrace
+client/library/dhtmlx/terrace/*
+
+client/library/dhtmlx/web
+client/library/dhtmlx/web/*
+
+client/library/dhtmlx/material
+client/library/dhtmlx/material/*
+
+client/library/dhtmlx/skyblue
+client/library/dhtmlx/skyblue/*
+
+client/library/dhtmlx/terrace
+client/library/dhtmlx/terrace/*
+
+client/library/dhtmlx/web
+client/library/dhtmlx/web/*
+
+
+server/models/model.auth.js.logs/*
+server/models/model.tree.js.files/html/*
+server/models/model.tree.js.files/pdf/*
+server/models/model.tree.js.files/word/*
+server/models/model.tree.js.logs/*
+server/models/model.usuarios.logs/*
 
 node_modules
 node_modules/*
 
-sql
-sql/*
+server/node_modules
+server/node_modules/*
 
-tmp
-tmp/*
+client/node_modules
+client/node_modules/*
 
-sql
-sql/*
 
 debug
 app-backend/ssl/*

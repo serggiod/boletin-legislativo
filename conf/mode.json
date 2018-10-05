@@ -1,1 +1,0 @@
-{"mode":"server","config":{"server":{"proto":"http","ip":"127.0.0.1","port":"8888"}},"build":{"client":{"os":"linux","arq":"ia32","baseHref":"http://192.168.0.17:8888/","icons":{"win32":"icon.ico","linux":"icon.png","darwin":"icon.icns"}},"server":{"os":"linux","arq":"ia32","baseHref":"http://localhost:8888/","icons":{"win32":"icon.ico","linux":"icon.png","darwin":"icon.icns"}}}}

@@ -1,9 +1,9 @@
-var $db   = require('../library/model.api');
-var $log     = require('../library/log.api');
+var $db = require('../library/model.api');
+var $log = require('../library/log.api');
 var $express = require('express');
-var $router  = $express.Router();
+var $router = $express.Router();
 
-$router.all('/',(rq,rs,n)=>{ rs.sendStatus(404); });
+$router.all('/',(rq,rs,n)=>{ rs.sendStatus(404).end(); });
 
 $router.post('/login',(rq,rs,n)=>{
 

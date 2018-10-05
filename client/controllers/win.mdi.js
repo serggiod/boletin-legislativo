@@ -3,11 +3,10 @@ var $path     = require('path');
 var $electron = require('electron');
 var $window   = $electron.BrowserWindow;
 var $event    = $electron.ipcMain;
-var $mode     = $path.join(__dirname,'/../conf/mode.json');
-    $mode     = $fs.readFileSync($mode,{encoding:'utf8'});
-    $mode     = JSON.parse($mode);
-var $config   = $mode.config.server;
-var $host     = $config.proto + '://' + $config.ip + ':' + $config.port + '/';
+var $config   = $path.join(__dirname,'/../conf/client.json');
+    $config   = $fs.readFileSync($config,'utf8');
+    $config   = JSON.parse($config);
+var $host     = $config.server.proto + '://' + $config.server.host + ':' + $config.server.port + '/';
 
 var winMdi           = new Object();
     winMdi.window    = null;
