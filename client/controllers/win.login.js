@@ -42,7 +42,7 @@ var winLogin  = new Object();
                     webSecurity:false,
                     allowRunningInsecureContent : true,
                     allowDisplayingInsecureContent:true,
-                    devTools:false
+                    devTools:true
                 }
             });
             winLogin.window.loadURL(view);

@@ -43,7 +43,7 @@ var winMdi           = new Object();
                     webSecurity:false,
                     allowRunningInsecureContent : true,
                     allowDisplayingInsecureContent:true,
-                    devTools:false
+                    devTools:true
                 }
             });
             winMdi.window.loadURL(view);

@@ -7,6 +7,9 @@ server/database/backupzip/*
 dist
 dist/*
 
+server/conf
+server/conf/*
+
 server/library/dhtmlx/material
 server/library/dhtmlx/material/*
 

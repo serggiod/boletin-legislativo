@@ -2,12 +2,20 @@ var $fs      = require('fs');
 var $cmd     = require('child_process');
 var $zip     = require('zip-dir');
 var $path    = require('path');
+var $https   = require('https');
 var $express = require('express');
 var $session = require('express-session');
 var $parser  = require('body-parser');
+
 var $config   = $path.join(__dirname,'/conf/server.json');
     $config   = $fs.readFileSync($config,'utf8');
     $config   = JSON.parse($config);
+
+var $ssl = new Object();
+    $ssl.key  = $path.join(__dirname,'/ssl/ssl.key');
+    $ssl.key  = $fs.readFileSync($ssl.key,'utf8');
+    $ssl.cert = $path.join(__dirname,'/ssl/ssl.crt');
+    $ssl.cert = $fs.readFileSync($ssl.cert,'utf8');
 
 // Modelos.
 var modelAuth     = require('./models/model.auth');
@@ -39,7 +47,10 @@ var $server = $express();
     $server.use('/models/model',(rq,rs,a)=>{rs.sendStatus(404).end();});
     $server.use('/models',(rq,rs,a)=>{rs.sendStatus(404).end();});
     $server.use('/',(rq,rs,a)=>{rs.sendStatus(404).end();});
-    $server.listen($config.port,()=>{
+
+    $listen = $https.createServer($ssl,$server);
+    $listen.listen($config.port,()=>{
+    //$server.listen($config.port,()=>{
         
         console.log('Servidor inicializado en: ' + $config.port);
 
