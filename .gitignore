@@ -75,6 +75,11 @@ server/node_modules/*
 client/node_modules
 client/node_modules/*
 
+client/.git/*
+client/.gitignore
+
+server/.git/*
+server/.gitignore
 
 debug
 app-backend/ssl/*
